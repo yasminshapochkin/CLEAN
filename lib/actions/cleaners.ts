@@ -31,12 +31,13 @@ export async function getCustomerLocation(
 ): Promise<{ lat: number; lng: number } | null> {
   const supabase = await createClient()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('customers')
     .select('lat, lng')
     .eq('id', userId)
     .single()
 
+  if (error) console.error('getCustomerLocation error:', error)
   if (!data?.lat || !data?.lng) return null
   return { lat: data.lat, lng: data.lng }
 }
