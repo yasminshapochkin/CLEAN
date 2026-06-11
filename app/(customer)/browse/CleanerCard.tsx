@@ -1,0 +1,64 @@
+import Link from 'next/link'
+import type { CleanerResult } from '@/lib/types/cleaner'
+
+const SERVICE_BADGE: Record<string, string> = {
+  residential: 'bg-indigo-100 text-indigo-700',
+  commercial: 'bg-green-100 text-green-700',
+  both: 'bg-yellow-100 text-yellow-800',
+}
+
+export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
+  const initial = cleaner.full_name.charAt(0).toUpperCase()
+  const bioExcerpt = cleaner.bio.length > 80 ? cleaner.bio.slice(0, 80) + '…' : cleaner.bio
+  const serviceLabel =
+    cleaner.service_types.includes('residential') && cleaner.service_types.includes('commercial')
+      ? 'both'
+      : cleaner.service_types[0] ?? 'residential'
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="flex items-center gap-3 mb-3">
+        {cleaner.avatar_url ? (
+          <img
+            src={cleaner.avatar_url}
+            alt={cleaner.full_name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center font-bold text-indigo-700">
+            {initial}
+          </div>
+        )}
+        <div>
+          <p className="font-bold text-gray-900">{cleaner.full_name}</p>
+          <p className="text-sm text-gray-500">
+            {cleaner.distance_km.toFixed(1)}km away · {cleaner.years_experience} yrs exp
+          </p>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500 mb-3 leading-relaxed">"{bioExcerpt}"</p>
+
+      <div className="flex gap-2 flex-wrap mb-3">
+        <span className={`text-xs px-2 py-0.5 rounded font-medium ${SERVICE_BADGE[serviceLabel]}`}>
+          {serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1)}
+        </span>
+        {cleaner.languages.length > 0 && (
+          <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">
+            🌐 {cleaner.languages.join(', ')}
+          </span>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center">
+        <span className="font-bold text-gray-900">₪{cleaner.hourly_rate}/hr</span>
+        <Link
+          href={`/cleaners/${cleaner.id}`}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+        >
+          View Profile
+        </Link>
+      </div>
+    </div>
+  )
+}
