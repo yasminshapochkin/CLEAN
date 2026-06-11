@@ -1,0 +1,218 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+function Spinner() {
+  return (
+    <svg className="animate-spin h-4 w-4 text-white inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+  );
+}
+
+export default function CleanerOnboardingPage() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const supabase = createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Session expired. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+
+    const fullName = formData.get("full_name") as string;
+    const phone = formData.get("phone") as string;
+    const bio = formData.get("bio") as string;
+    const yearsExp = parseInt(formData.get("years_experience") as string) || 0;
+    const languagesRaw = formData.get("languages") as string;
+    const languages = languagesRaw
+      .split(",")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const docFile = formData.get("id_document") as File;
+
+    // Upsert profile row — handles the case where a trigger pre-created it with nulls
+    const { error: profileErr } = await supabase.from("profiles").upsert({
+      id: user.id,
+      role: "cleaner",
+      full_name: fullName,
+      phone,
+    });
+    if (profileErr) {
+      setError(profileErr.message);
+      setLoading(false);
+      return;
+    }
+
+    // Upload ID document to private bucket
+    let docUrl: string | null = null;
+    if (docFile && docFile.size > 0) {
+      const ext = docFile.name.split(".").pop();
+      const path = `${user.id}/id-doc.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("id-documents")
+        .upload(path, docFile, { upsert: true });
+      if (uploadErr) {
+        setError(`Document upload failed: ${uploadErr.message}`);
+        setLoading(false);
+        return;
+      }
+      docUrl = path;
+    }
+
+    // Insert cleaner row
+    const { error: cleanerErr } = await supabase.from("cleaners").insert({
+      id: user.id,
+      bio,
+      years_experience: yearsExp,
+      languages,
+      status: "pending",
+    });
+    if (cleanerErr) {
+      setError(cleanerErr.message);
+      setLoading(false);
+      return;
+    }
+
+    // Insert application
+    await supabase.from("cleaner_applications").insert({
+      cleaner_id: user.id,
+      id_document_url: docUrl,
+      status: "pending",
+    });
+
+    router.push("/cleaner/pending");
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+      {loading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <svg className="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <p className="text-sm font-medium text-gray-600">Submitting application…</p>
+        </div>
+      )}
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow p-8">
+        <form method="POST" action="/api/auth/signout?redirectTo=/register">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-5 transition-colors disabled:opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Go back
+          </button>
+        </form>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Cleaner application</h1>
+        <p className="text-sm text-gray-500 mb-6">
+          Fill in your details. Our team will review your application within 1–2 business days.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+              <input
+                type="text"
+                name="full_name"
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+            <textarea
+              name="bio"
+              rows={3}
+              placeholder="Tell customers about your experience and approach..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Years of experience
+              </label>
+              <input
+                type="number"
+                name="years_experience"
+                min="0"
+                max="50"
+                defaultValue="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Languages (comma-separated)
+              </label>
+              <input
+                type="text"
+                name="languages"
+                placeholder="English, Spanish"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              ID document <span className="text-gray-400">(passport, national ID)</span>
+            </label>
+            <input
+              type="file"
+              name="id_document"
+              accept=".pdf,.jpg,.jpeg,.png"
+              required
+              className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+            />
+            <p className="text-xs text-gray-400 mt-1">PDF, JPG, or PNG. Stored securely.</p>
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+          >
+            {loading ? <><Spinner />Submitting…</> : "Submit application"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
