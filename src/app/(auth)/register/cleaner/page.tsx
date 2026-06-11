@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,20 +17,40 @@ export default function CleanerOnboardingPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creds, setCreds] = useState<{ email: string; password: string } | null>(null);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("pending_signup");
+    if (!raw) {
+      router.replace("/register");
+      return;
+    }
+    setCreds(JSON.parse(raw));
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!creds) return;
     setLoading(true);
     setError(null);
 
     const formData = new FormData(e.currentTarget);
     const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Create the account now that the user has filled in all their details
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+      email: creds.email,
+      password: creds.password,
+    });
+    if (signUpErr) {
+      setError(signUpErr.message);
+      setLoading(false);
+      return;
+    }
+
+    const user = signUpData.user;
     if (!user) {
-      setError("Session expired. Please sign in again.");
+      setError("Sign up failed. Please try again.");
       setLoading(false);
       return;
     }
@@ -40,13 +60,9 @@ export default function CleanerOnboardingPage() {
     const bio = formData.get("bio") as string;
     const yearsExp = parseInt(formData.get("years_experience") as string) || 0;
     const languagesRaw = formData.get("languages") as string;
-    const languages = languagesRaw
-      .split(",")
-      .map((l) => l.trim())
-      .filter(Boolean);
+    const languages = languagesRaw.split(",").map((l) => l.trim()).filter(Boolean);
     const docFile = formData.get("id_document") as File;
 
-    // Upsert profile row — handles the case where a trigger pre-created it with nulls
     const { error: profileErr } = await supabase.from("profiles").upsert({
       id: user.id,
       role: "cleaner",
@@ -59,7 +75,6 @@ export default function CleanerOnboardingPage() {
       return;
     }
 
-    // Upload ID document to private bucket
     let docUrl: string | null = null;
     if (docFile && docFile.size > 0) {
       const ext = docFile.name.split(".").pop();
@@ -75,7 +90,6 @@ export default function CleanerOnboardingPage() {
       docUrl = path;
     }
 
-    // Insert cleaner row
     const { error: cleanerErr } = await supabase.from("cleaners").insert({
       id: user.id,
       bio,
@@ -89,13 +103,13 @@ export default function CleanerOnboardingPage() {
       return;
     }
 
-    // Insert application
     await supabase.from("cleaner_applications").insert({
       cleaner_id: user.id,
       id_document_url: docUrl,
       status: "pending",
     });
 
+    localStorage.removeItem("pending_signup");
     router.push("/cleaner/pending");
   }
 
@@ -111,18 +125,18 @@ export default function CleanerOnboardingPage() {
         </div>
       )}
       <div className="w-full max-w-lg bg-white rounded-2xl shadow p-8">
-        <form method="POST" action="/api/auth/signout?redirectTo=/register">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-5 transition-colors disabled:opacity-50"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Go back
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => router.push("/register")}
+          disabled={loading}
+          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-5 transition-colors disabled:opacity-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Go back
+        </button>
+
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Cleaner application</h1>
         <p className="text-sm text-gray-500 mb-6">
           Fill in your details. Our team will review your application within 1–2 business days.
@@ -161,9 +175,7 @@ export default function CleanerOnboardingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Years of experience
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Years of experience</label>
               <input
                 type="number"
                 name="years_experience"
@@ -174,9 +186,7 @@ export default function CleanerOnboardingPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Languages (comma-separated)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Languages (comma-separated)</label>
               <input
                 type="text"
                 name="languages"
@@ -206,7 +216,7 @@ export default function CleanerOnboardingPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !creds}
             className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
           >
             {loading ? <><Spinner />Submitting…</> : "Submit application"}

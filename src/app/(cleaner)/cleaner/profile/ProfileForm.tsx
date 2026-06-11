@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { updateCleanerProfile } from "../actions";
+import { updateCleanerProfile } from "../../actions";
 import type { Profile, Cleaner } from "@/types/database";
 
 interface Props {

@@ -25,6 +25,41 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/register/cleaner/loading.js"
+    ],
+    "/(cleaner)/cleaner/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/dashboard/page.js"
+    ],
+    "/(cleaner)/cleaner/dashboard/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/dashboard/loading.js"
+    ],
+    "/(cleaner)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/layout.js"
+    ],
+    "/(cleaner)/cleaner/requests/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/requests/page.js"
+    ],
+    "/(cleaner)/cleaner/availability/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/availability/page.js"
+    ],
+    "/(cleaner)/cleaner/profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/profile/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

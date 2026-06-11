@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addAvailability, deleteAvailability } from "../actions";
+import { addAvailability, deleteAvailability } from "../../actions";
 import type { CleanerAvailability } from "@/types/database";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

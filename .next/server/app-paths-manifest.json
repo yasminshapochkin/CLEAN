@@ -1,6 +1,8 @@
 {
-  "/(auth)/register/page": "app/(auth)/register/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(auth)/register/cleaner/page": "app/(auth)/register/cleaner/page.js",
-  "/api/auth/signout/route": "app/api/auth/signout/route.js"
+  "/(cleaner)/cleaner/requests/page": "app/(cleaner)/cleaner/requests/page.js",
+  "/(cleaner)/cleaner/dashboard/page": "app/(cleaner)/cleaner/dashboard/page.js",
+  "/(cleaner)/cleaner/availability/page": "app/(cleaner)/cleaner/availability/page.js",
+  "/(cleaner)/cleaner/profile/page": "app/(cleaner)/cleaner/profile/page.js"
 }

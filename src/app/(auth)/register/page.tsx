@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signUp } from "../actions";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserRole } from "@/types/database";
 
@@ -31,24 +31,30 @@ function Spinner() {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [role, setRole] = useState<UserRole | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (!role) return;
-    setLoading(true);
     setError(null);
-    const result = await signUp(formData, role);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    // Hold credentials in localStorage — the Supabase account is created only
+    // when the user completes and submits the role-specific onboarding form.
+    // This way pressing "Go back" never leaves a half-created account behind.
+    localStorage.setItem("pending_signup", JSON.stringify({ email, password }));
+    router.push(`/register/${role}`);
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      {/* Full-page overlay while loading */}
       {loading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <svg
@@ -110,7 +116,7 @@ export default function RegisterPage() {
           </button>
         </div>
 
-        <form action={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input

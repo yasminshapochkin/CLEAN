@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { respondToBooking } from "../actions";
+import { respondToBooking } from "../../actions";
 import type { BookingWithCustomer, BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
