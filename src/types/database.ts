@@ -53,7 +53,7 @@ export interface CleanerApplication {
 export interface CleanerAvailability {
   id: string;
   cleaner_id: string;
-  day_of_week: number;
+  date: string;
   start_time: string;
   end_time: string;
 }

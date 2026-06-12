@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import AvailabilityGrid from "./AvailabilityGrid";
+import CalendarGrid from "./CalendarGrid";
 import type { CleanerAvailability } from "@/types/database";
 
 export default async function AvailabilityPage() {
@@ -10,11 +10,18 @@ export default async function AvailabilityPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Fetch availability for the next 4 weeks
+  const today = new Date();
+  const from = today.toISOString().split("T")[0];
+  const to = new Date(today.getTime() + 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
   const { data: slots } = await supabase
     .from("cleaner_availability")
     .select("*")
     .eq("cleaner_id", user.id)
-    .order("day_of_week")
+    .gte("date", from)
+    .lte("date", to)
+    .order("date")
     .order("start_time")
     .returns<CleanerAvailability[]>();
 
@@ -22,9 +29,9 @@ export default async function AvailabilityPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
       <p className="text-base text-gray-500 mb-6">
-        Set your weekly recurring availability. Customers can only book during these hours.
+        Set your availability for the next 4 weeks. Customers can only book during these hours.
       </p>
-      <AvailabilityGrid slots={slots ?? []} />
+      <CalendarGrid slots={slots ?? []} />
     </div>
   );
 }

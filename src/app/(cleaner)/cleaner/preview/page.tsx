@@ -4,7 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Profile, Cleaner, CleanerAvailability } from "@/types/database";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function getMonday(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export default async function PreviewPage() {
   const supabase = await createClient();
@@ -13,6 +27,10 @@ export default async function PreviewPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const today = new Date();
+  const from = toLocalDateStr(today);
+  const to = toLocalDateStr(new Date(today.getTime() + 28 * 24 * 60 * 60 * 1000));
+
   const [{ data: profile }, { data: cleaner }, { data: slots }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
     supabase.from("cleaners").select("*").eq("id", user.id).single<Cleaner>(),
@@ -20,13 +38,24 @@ export default async function PreviewPage() {
       .from("cleaner_availability")
       .select("*")
       .eq("cleaner_id", user.id)
-      .order("day_of_week")
+      .gte("date", from)
+      .lte("date", to)
+      .order("date")
       .order("start_time")
       .returns<CleanerAvailability[]>(),
   ]);
 
-  const slotsByDay = DAYS.reduce<Record<number, CleanerAvailability[]>>((acc, _, i) => {
-    acc[i] = (slots ?? []).filter((s) => s.day_of_week === i);
+  const monday = getMonday(today);
+  const days = Array.from({ length: 28 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+  const weeks = Array.from({ length: 4 }, (_, w) => days.slice(w * 7, w * 7 + 7));
+
+  const slotsByDate = (slots ?? []).reduce<Record<string, CleanerAvailability[]>>((acc, s) => {
+    if (!acc[s.date]) acc[s.date] = [];
+    acc[s.date].push(s);
     return acc;
   }, {});
 
@@ -94,25 +123,38 @@ export default async function PreviewPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Availability</h2>
             {(slots ?? []).length === 0 ? (
-              <p className="text-base text-gray-400">No availability set yet.</p>
+              <p className="text-base text-gray-400">No availability set for the next 4 weeks.</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                {DAYS.map((day, i) => (
-                  <div key={day} className={`rounded-xl border p-4 min-h-[120px] flex flex-col ${slotsByDay[i].length === 0 ? "bg-red-50 border-red-100" : "bg-gray-50 border-gray-200"}`}>
-                    <div className="text-base font-bold text-gray-700 mb-3">{day}</div>
-                    <div className="flex-1 space-y-2">
-                      {slotsByDay[i].length === 0 ? (
-                        <p className="text-base text-gray-300">—</p>
-                      ) : (
-                        slotsByDay[i].map((slot) => (
-                          <div key={slot.id} className="bg-blue-50 rounded-lg px-3 py-2">
-                            <span className="text-base font-medium text-blue-700">
-                              {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
-                            </span>
+              <div className="space-y-2">
+                <div className="grid grid-cols-7 gap-2 mb-1">
+                  {WEEK_DAYS.map((d) => (
+                    <div key={d} className="text-center text-base font-bold text-gray-500 py-1">{d}</div>
+                  ))}
+                </div>
+                {weeks.map((week, wi) => (
+                  <div key={wi} className="grid grid-cols-7 gap-2">
+                    {week.map((day) => {
+                      const dateStr = toLocalDateStr(day);
+                      const daySlots = slotsByDate[dateStr] ?? [];
+                      const isFirstOfMonth = day.getDate() === 1;
+                      return (
+                        <div key={dateStr} className={`rounded-xl border p-3 min-h-[90px] flex flex-col ${daySlots.length > 0 ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-base font-bold text-gray-700">{day.getDate()}</span>
+                            {isFirstOfMonth && <span className="text-xs text-gray-400">{MONTHS[day.getMonth()]}</span>}
                           </div>
-                        ))
-                      )}
-                    </div>
+                          <div className="space-y-1">
+                            {daySlots.map((slot) => (
+                              <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
+                                <span className="text-sm font-medium text-blue-700">
+                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

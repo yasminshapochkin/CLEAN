@@ -96,7 +96,7 @@ export async function addAvailability(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  const dayOfWeek = parseInt(formData.get("day_of_week") as string);
+  const date = formData.get("date") as string;
   const startTime = formData.get("start_time") as string;
   const endTime = formData.get("end_time") as string;
 
@@ -106,7 +106,7 @@ export async function addAvailability(formData: FormData) {
 
   const { error } = await supabase.from("cleaner_availability").insert({
     cleaner_id: user.id,
-    day_of_week: dayOfWeek,
+    date,
     start_time: startTime,
     end_time: endTime,
   });
