@@ -1,8 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(cleaner)/cleaner/requests/page": "app/(cleaner)/cleaner/requests/page.js",
-  "/(cleaner)/cleaner/dashboard/page": "app/(cleaner)/cleaner/dashboard/page.js",
-  "/(cleaner)/cleaner/availability/page": "app/(cleaner)/cleaner/availability/page.js",
-  "/(cleaner)/cleaner/profile/page": "app/(cleaner)/cleaner/profile/page.js"
+  "/(cleaner)/cleaner/dashboard/page": "app/(cleaner)/cleaner/dashboard/page.js"
 }
