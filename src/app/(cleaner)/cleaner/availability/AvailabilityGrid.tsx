@@ -29,17 +29,23 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
     {}
   );
 
+  const [startHour, setStartHour] = useState("08");
+  const [startMin, setStartMin] = useState("00");
+  const [endHour, setEndHour] = useState("17");
+  const [endMin, setEndMin] = useState("00");
+
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
     formData.set("day_of_week", String(modal.day));
+    formData.set("start_time", `${startHour}:${startMin}`);
+    formData.set("end_time", `${endHour}:${endMin}`);
     const result = await addAvailability(formData);
     if (result?.error) {
       setError(result.error);
     } else {
-      // Optimistic: re-fetch would happen via revalidatePath, but we reload here
       setModal({ open: false, day: 0 });
       window.location.reload();
     }
@@ -104,21 +110,49 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start time</label>
-                <input
-                  type="time"
-                  name="start_time"
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={startHour}
+                    onChange={(e) => setStartHour(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
+                      <option key={h} value={h}>{h}:00</option>
+                    ))}
+                  </select>
+                  <select
+                    value={startMin}
+                    onChange={(e) => setStartMin(e.target.value)}
+                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {["00", "15", "30", "45"].map((m) => (
+                      <option key={m} value={m}>:{m}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">End time</label>
-                <input
-                  type="time"
-                  name="end_time"
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={endHour}
+                    onChange={(e) => setEndHour(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
+                      <option key={h} value={h}>{h}:00</option>
+                    ))}
+                  </select>
+                  <select
+                    value={endMin}
+                    onChange={(e) => setEndMin(e.target.value)}
+                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {["00", "15", "30", "45"].map((m) => (
+                      <option key={m} value={m}>:{m}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               {error && (
                 <p className="text-sm text-red-600">{error}</p>
