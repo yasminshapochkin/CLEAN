@@ -5,7 +5,11 @@ import { addAvailability, deleteAvailability } from "../../actions";
 import type { CleanerAvailability } from "@/types/database";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function getMonday(date: Date): Date {
   const d = new Date(date);
@@ -40,17 +44,28 @@ function isPast(d: Date): boolean {
 }
 
 function getDayName(d: Date): string {
-  return WEEK_DAYS[(d.getDay() + 6) % 7]; // Mon=0 ... Sun=6
+  return WEEK_DAYS[(d.getDay() + 6) % 7];
+}
+
+function formatFullDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return `${WEEK_DAYS[(d.getDay() + 6) % 7]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 interface Props {
   slots: CleanerAvailability[];
 }
 
+interface DayPanel {
+  open: boolean;
+  dateStr: string;
+  past: boolean;
+}
+
 export default function CalendarGrid({ slots: initialSlots }: Props) {
   const [slots, setSlots] = useState(initialSlots);
   const [columns, setColumns] = useState(7);
-  const [modal, setModal] = useState<{ open: boolean; date: string }>({ open: false, date: "" });
+  const [panel, setPanel] = useState<DayPanel>({ open: false, dateStr: "", past: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [startHour, setStartHour] = useState("08");
@@ -70,19 +85,32 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
     return acc;
   }, {});
 
+  function openPanel(day: Date) {
+    setError(null);
+    setStartHour("08");
+    setStartMin("00");
+    setEndHour("17");
+    setEndMin("00");
+    setPanel({ open: true, dateStr: toLocalDateStr(day), past: isPast(day) });
+  }
+
+  function closePanel() {
+    setPanel({ open: false, dateStr: "", past: false });
+    setError(null);
+  }
+
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const formData = new FormData();
-    formData.set("date", modal.date);
+    formData.set("date", panel.dateStr);
     formData.set("start_time", `${startHour}:${startMin}`);
     formData.set("end_time", `${endHour}:${endMin}`);
     const result = await addAvailability(formData);
     if (result?.error) {
       setError(result.error);
     } else {
-      setModal({ open: false, date: "" });
       window.location.reload();
     }
     setLoading(false);
@@ -97,11 +125,15 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
     }
   }
 
+  const panelSlots = slotsByDate[panel.dateStr] ?? [];
+
   return (
     <>
       {/* Column control */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
-        <span className="text-base font-semibold text-gray-700">{columns} day{columns > 1 ? "s" : ""} per row</span>
+        <span className="text-base font-semibold text-gray-700">
+          {columns} day{columns > 1 ? "s" : ""} per row
+        </span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setColumns((c) => Math.max(1, c - 1))}
@@ -120,9 +152,12 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
         </div>
       </div>
 
-      {/* Day headers — only shown when columns = 7 */}
+      {/* Day headers — only when columns = 7 */}
       {columns === 7 && (
-        <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        <div
+          className="grid border-b border-gray-100"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
           {WEEK_DAYS.map((d) => (
             <div key={d} className="text-center text-sm font-bold text-gray-500 py-2">
               {d}
@@ -146,13 +181,18 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
               const today = isToday(day);
 
               return (
-                <div
+                <button
                   key={dateStr}
-                  className={`flex flex-col p-2 min-h-[100px] ${
-                    past ? "opacity-40 bg-gray-50" : daySlots.length > 0 ? "bg-blue-50" : "bg-white"
+                  onClick={() => openPanel(day)}
+                  className={`flex flex-col p-2 min-h-[100px] text-left transition-colors ${
+                    past
+                      ? "opacity-40 bg-gray-50 hover:bg-gray-100"
+                      : daySlots.length > 0
+                      ? "bg-blue-50 hover:bg-blue-100"
+                      : "bg-white hover:bg-gray-50"
                   }`}
                 >
-                  {/* Date + day name */}
+                  {/* Date number */}
                   <div className="mb-1">
                     <span
                       className={`text-base font-bold rounded-full w-8 h-8 flex items-center justify-center ${
@@ -165,90 +205,154 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
                       <span className="text-xs text-gray-400 font-medium">{getDayName(day)}</span>
                     )}
                     {day.getDate() === 1 && (
-                      <span className="text-xs text-gray-400 block">{MONTHS[day.getMonth()]}</span>
+                      <span className="text-xs text-gray-400 block">{MONTHS_SHORT[day.getMonth()]}</span>
                     )}
                   </div>
 
-                  {/* Slots */}
+                  {/* Slots preview */}
                   <div className="flex-1 space-y-1">
-                    {daySlots.map((slot) => (
-                      <div key={slot.id} className="flex items-center justify-between bg-blue-100 rounded px-1 py-0.5">
-                        <span className="text-xs font-medium text-blue-700 leading-tight">
+                    {daySlots.slice(0, 3).map((slot) => (
+                      <div key={slot.id} className="bg-blue-100 rounded px-1 py-0.5">
+                        <span className="text-xs font-medium text-blue-700 leading-tight block">
                           {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
                         </span>
-                        <button
-                          onClick={() => handleDelete(slot.id)}
-                          className="text-red-400 hover:text-red-600 font-bold text-base leading-none ml-1"
-                        >
-                          ×
-                        </button>
                       </div>
                     ))}
+                    {daySlots.length > 3 && (
+                      <span className="text-xs text-blue-400">+{daySlots.length - 3} more</span>
+                    )}
                   </div>
 
-                  {/* Add button */}
-                  {!past && (
-                    <button
-                      onClick={() => setModal({ open: true, date: dateStr })}
-                      className="mt-1 w-full text-center text-blue-400 hover:text-blue-600 text-2xl font-bold leading-none"
-                    >
-                      +
-                    </button>
+                  {/* Plus hint when empty and not past */}
+                  {!past && daySlots.length === 0 && (
+                    <span className="mt-1 text-gray-300 text-2xl font-bold leading-none self-center">+</span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
         ))}
       </div>
 
-      {error && (
-        <p className="m-4 text-base text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-      )}
+      {/* Day detail panel */}
+      {panel.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
+          onClick={closePanel}
+        >
+          <div
+            className="bg-white w-full sm:max-w-md sm:mx-4 sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Panel header */}
+            <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+              <div>
+                <p className="text-sm text-gray-400 font-medium uppercase tracking-wide">
+                  {panel.past ? "Past day" : "Availability"}
+                </p>
+                <h2 className="text-2xl font-bold text-gray-900 mt-0.5">
+                  {formatFullDate(panel.dateStr)}
+                </h2>
+              </div>
+              <button
+                onClick={closePanel}
+                className="text-2xl text-gray-400 hover:text-gray-700 font-bold leading-none mt-1"
+              >
+                ✕
+              </button>
+            </div>
 
-      {/* Add hours modal */}
-      {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Add hours</h2>
-            <p className="text-base text-gray-500 mb-6">{modal.date}</p>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-1">Start time</label>
-                <div className="flex gap-2">
-                  <select value={startHour} onChange={(e) => setStartHour(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
-                      <option key={h} value={h}>{h}:00</option>
-                    ))}
-                  </select>
-                  <select value={startMin} onChange={(e) => setStartMin(e.target.value)} className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
-                  </select>
-                </div>
+            {/* Slots list */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              {panelSlots.length === 0 ? (
+                <p className="text-base text-gray-400 text-center py-4">
+                  {panel.past ? "No hours were set for this day." : "No hours set yet. Add some below."}
+                </p>
+              ) : (
+                panelSlots.map((slot) => (
+                  <div
+                    key={slot.id}
+                    className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-lg font-semibold text-blue-800">
+                        {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                      </p>
+                    </div>
+                    {!panel.past && (
+                      <button
+                        onClick={() => handleDelete(slot.id)}
+                        className="text-red-400 hover:text-red-600 text-2xl font-bold leading-none ml-4"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add hours form — only for non-past days */}
+            {!panel.past && (
+              <div className="border-t border-gray-100 px-6 py-5">
+                <p className="text-base font-semibold text-gray-700 mb-3">Add hours</p>
+                <form onSubmit={handleAdd} className="space-y-3">
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="block text-sm text-gray-500 mb-1">Start</label>
+                      <div className="flex gap-1">
+                        <select
+                          value={startHour}
+                          onChange={(e) => setStartHour(e.target.value)}
+                          className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={startMin}
+                          onChange={(e) => setStartMin(e.target.value)}
+                          className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm text-gray-500 mb-1">End</label>
+                      <div className="flex gap-1">
+                        <select
+                          value={endHour}
+                          onChange={(e) => setEndHour(e.target.value)}
+                          className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={endMin}
+                          onChange={(e) => setEndMin(e.target.value)}
+                          className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  {error && <p className="text-base text-red-600">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white rounded-xl py-3 text-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? "Adding…" : "Add hours"}
+                  </button>
+                </form>
               </div>
-              <div>
-                <label className="block text-base font-medium text-gray-700 mb-1">End time</label>
-                <div className="flex gap-2">
-                  <select value={endHour} onChange={(e) => setEndHour(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
-                      <option key={h} value={h}>{h}:00</option>
-                    ))}
-                  </select>
-                  <select value={endMin} onChange={(e) => setEndMin(e.target.value)} className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
-                  </select>
-                </div>
-              </div>
-              {error && <p className="text-base text-red-600">{error}</p>}
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => { setModal({ open: false, date: "" }); setError(null); }} className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-3 text-lg font-medium hover:bg-gray-50">
-                  Cancel
-                </button>
-                <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white rounded-lg py-3 text-lg font-semibold hover:bg-blue-700 disabled:opacity-50">
-                  {loading ? "Adding..." : "Add"}
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
       )}
