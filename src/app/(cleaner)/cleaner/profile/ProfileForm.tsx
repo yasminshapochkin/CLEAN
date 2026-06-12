@@ -87,7 +87,7 @@ export default function ProfileForm({ profile, cleaner }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-base font-medium text-gray-700 mb-1">
-            Hourly rate (£)
+            Hourly rate (₪)
           </label>
           <input
             type="number"

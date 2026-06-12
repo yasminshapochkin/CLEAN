@@ -19,7 +19,7 @@ export default async function AvailabilityPage() {
     .returns<CleanerAvailability[]>();
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
       <p className="text-base text-gray-500 mb-6">
         Set your weekly recurring availability. Customers can only book during these hours.
