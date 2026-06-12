@@ -26,11 +26,13 @@ export default async function AvailabilityPage() {
     .returns<CleanerAvailability[]>();
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
-      <p className="text-base text-gray-500 mb-6">
-        Set your availability for the next 4 weeks. Customers can only book during these hours.
-      </p>
+    <div className="-mx-8 -mt-20 lg:-mt-8 flex flex-col min-h-screen bg-white">
+      <div className="px-6 pt-6 pb-3 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
+        <p className="text-base text-gray-500">
+          Set your availability for the next 4 weeks. Customers can only book during these hours.
+        </p>
+      </div>
       <CalendarGrid slots={slots ?? []} />
     </div>
   );

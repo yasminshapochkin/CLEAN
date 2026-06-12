@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import AvailabilityModal from "./AvailabilityModal";
 import type { Profile, Cleaner, CleanerAvailability } from "@/types/database";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -51,7 +52,13 @@ export default async function PreviewPage() {
     d.setDate(monday.getDate() + i);
     return d;
   });
-  const weeks = Array.from({ length: 4 }, (_, w) => days.slice(w * 7, w * 7 + 7));
+  const weeks = Array.from({ length: 4 }, (_, w) =>
+    days.slice(w * 7, w * 7 + 7).map((d) => ({
+      dateStr: toLocalDateStr(d),
+      dayNum: d.getDate(),
+      monthName: d.getDate() === 1 ? MONTHS[d.getMonth()] : null,
+    }))
+  );
 
   const slotsByDate = (slots ?? []).reduce<Record<string, CleanerAvailability[]>>((acc, s) => {
     if (!acc[s.date]) acc[s.date] = [];
@@ -60,7 +67,7 @@ export default async function PreviewPage() {
   }, {});
 
   return (
-    <div className="absolute inset-0 overflow-y-auto bg-gray-100">
+    <div className="bg-gray-100 -mx-8 -mt-20 lg:-mt-8 min-h-screen">
       {/* Edit banner */}
       <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-2 flex items-center justify-between">
         <p className="text-base text-yellow-800 font-medium">This is your public profile — as customers see it.</p>
@@ -101,71 +108,25 @@ export default async function PreviewPage() {
                 </span>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="px-10 py-8 grid grid-cols-3 gap-6">
-
-        {/* Left column — main info */}
-        <div className="col-span-2 space-y-5">
-
-          {/* Bio */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
-            <p className="text-base text-gray-700 leading-relaxed">
-              {cleaner?.bio ?? <span className="text-gray-400">No bio written yet.</span>}
-            </p>
-          </div>
-
-          {/* Availability */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Availability</h2>
-            {(slots ?? []).length === 0 ? (
-              <p className="text-base text-gray-400">No availability set for the next 4 weeks.</p>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid grid-cols-7 gap-2 mb-1">
-                  {WEEK_DAYS.map((d) => (
-                    <div key={d} className="text-center text-base font-bold text-gray-500 py-1">{d}</div>
-                  ))}
-                </div>
-                {weeks.map((week, wi) => (
-                  <div key={wi} className="grid grid-cols-7 gap-2">
-                    {week.map((day) => {
-                      const dateStr = toLocalDateStr(day);
-                      const daySlots = slotsByDate[dateStr] ?? [];
-                      const isFirstOfMonth = day.getDate() === 1;
-                      return (
-                        <div key={dateStr} className={`rounded-xl border p-3 min-h-[90px] flex flex-col ${daySlots.length > 0 ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
-                          <div className="flex items-center gap-1 mb-1">
-                            <span className="text-base font-bold text-gray-700">{day.getDate()}</span>
-                            {isFirstOfMonth && <span className="text-xs text-gray-400">{MONTHS[day.getMonth()]}</span>}
-                          </div>
-                          <div className="space-y-1">
-                            {daySlots.map((slot) => (
-                              <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
-                                <span className="text-sm font-medium text-blue-700">
-                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+            {cleaner?.languages && cleaner.languages.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {cleaner.languages.map((lang) => (
+                  <span
+                    key={lang}
+                    className="bg-gray-100 text-gray-700 text-base px-3 py-1 rounded-full"
+                  >
+                    {lang}
+                  </span>
                 ))}
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Right column — stats */}
-        <div className="space-y-5">
-
-          {/* Pricing & details */}
+      {/* Stats block — reused in both layouts */}
+      {(() => {
+        const statsBlock = (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
             {cleaner?.hourly_rate && (
               <div>
@@ -188,25 +149,78 @@ export default async function PreviewPage() {
               </div>
             )}
           </div>
+        );
 
-          {/* Languages */}
-          {cleaner?.languages && cleaner.languages.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3">Languages</h2>
-              <div className="flex flex-wrap gap-2">
-                {cleaner.languages.map((lang) => (
-                  <span
-                    key={lang}
-                    className="bg-gray-100 text-gray-700 text-base px-3 py-1.5 rounded-full"
-                  >
-                    {lang}
-                  </span>
+        const aboutBlock = (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
+            <p className="text-base text-gray-700 leading-relaxed">
+              {cleaner?.bio ?? <span className="text-gray-400">No bio written yet.</span>}
+            </p>
+          </div>
+        );
+
+        const desktopAvailability = (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Availability</h2>
+            {(slots ?? []).length === 0 ? (
+              <p className="text-base text-gray-400">No availability set for the next 4 weeks.</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-7 gap-2 mb-1">
+                  {WEEK_DAYS.map((d) => (
+                    <div key={d} className="text-center text-base font-bold text-gray-500 py-1">{d}</div>
+                  ))}
+                </div>
+                {weeks.map((week, wi) => (
+                  <div key={wi} className="grid grid-cols-7 gap-2">
+                    {week.map((day) => {
+                      const daySlots = slotsByDate[day.dateStr] ?? [];
+                      return (
+                        <div key={day.dateStr} className={`rounded-xl border p-3 min-h-[90px] flex flex-col ${daySlots.length > 0 ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
+                          <div className="flex items-center gap-1 mb-1">
+                            <span className="text-base font-bold text-gray-700">{day.dayNum}</span>
+                            {day.monthName && <span className="text-xs text-gray-400">{day.monthName}</span>}
+                          </div>
+                          <div className="space-y-1">
+                            {daySlots.map((slot) => (
+                              <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
+                                <span className="text-sm font-medium text-blue-700">
+                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ))}
               </div>
+            )}
+          </div>
+        );
+
+        return (
+          <>
+            {/* ── Mobile layout ── */}
+            <div className="lg:hidden px-4 py-6 space-y-4">
+              {aboutBlock}
+              {statsBlock}
+              <AvailabilityModal weeks={weeks} slots={slots ?? []} />
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* ── Desktop layout ── */}
+            <div className="hidden lg:grid px-10 py-8 grid-cols-3 gap-6">
+              <div className="col-span-2 space-y-5">
+                {aboutBlock}
+                {desktopAvailability}
+              </div>
+              <div>{statsBlock}</div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

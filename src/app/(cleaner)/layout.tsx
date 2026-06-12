@@ -38,39 +38,17 @@ export default async function CleanerLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-white border-r border-gray-200 flex flex-col">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <span className="text-lg font-bold text-blue-600">Clean</span>
-        </div>
-        <NavLinks />
-        <div className="px-4 py-4 border-t border-gray-100 space-y-2">
-          <div className="text-base font-medium text-gray-900 truncate">
-            {profile.full_name ?? user.email}
-          </div>
-          {cleaner && (
-            <span
-              className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${
-                statusColor[cleaner.status] ?? "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {cleaner.status}
-            </span>
-          )}
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="w-full text-left text-base text-white bg-[#dc2626] hover:bg-red-600 transition-colors rounded-lg px-3 py-2 font-medium"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="relative flex-1 p-8 overflow-y-auto">{children}</main>
+    <div className="min-h-screen bg-gray-50 lg:flex">
+      <NavLinks
+        signOut={signOut}
+        userName={profile.full_name ?? user.email ?? ""}
+        status={cleaner?.status ?? null}
+        statusColor={statusColor[cleaner?.status ?? ""] ?? "bg-gray-100 text-gray-600"}
+      />
+      {/* pt-14 on mobile to clear the fixed top bar */}
+      <main className="relative flex-1 p-8 pt-20 lg:pt-8 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }
