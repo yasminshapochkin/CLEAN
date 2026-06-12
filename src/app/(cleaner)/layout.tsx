@@ -61,7 +61,7 @@ export default async function CleanerLayout({
           <form action={signOut}>
             <button
               type="submit"
-              className="w-full text-left text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="w-full text-left text-base text-white bg-[#dc2626] hover:bg-red-600 transition-colors rounded-lg px-3 py-2 font-medium"
             >
               Sign out
             </button>
