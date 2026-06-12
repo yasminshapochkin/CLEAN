@@ -15,4 +15,5 @@ export type CleanerResult = {
   years_experience: number
   languages: string[]
   distance_km: number
+  area?: string
 }

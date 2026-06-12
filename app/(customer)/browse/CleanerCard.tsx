@@ -7,6 +7,12 @@ const SERVICE_BADGE: Record<string, string> = {
   both: 'bg-yellow-100 text-yellow-800',
 }
 
+const SERVICE_ACCENT: Record<string, string> = {
+  residential: 'border-t-indigo-400',
+  commercial: 'border-t-green-400',
+  both: 'border-t-yellow-400',
+}
+
 export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
   const initial = cleaner.full_name.charAt(0).toUpperCase()
   const bioExcerpt = cleaner.bio.length > 80 ? cleaner.bio.slice(0, 80) + '…' : cleaner.bio
@@ -16,7 +22,7 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
       : cleaner.service_types[0] ?? 'residential'
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 border-t-4 ${SERVICE_ACCENT[serviceLabel]} hover:shadow-lg transition-shadow`}>
       <div className="flex items-center gap-3 mb-3">
         {cleaner.avatar_url ? (
           <img
@@ -25,7 +31,7 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
             className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center font-bold text-indigo-700">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center font-bold text-white">
             {initial}
           </div>
         )}
@@ -43,6 +49,11 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
         <span className={`text-xs px-2 py-0.5 rounded font-medium ${SERVICE_BADGE[serviceLabel]}`}>
           {serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1)}
         </span>
+        {cleaner.area && (
+          <span className="text-xs px-2 py-0.5 rounded bg-pink-100 text-pink-700 font-medium">
+            📍 {cleaner.area}
+          </span>
+        )}
         {cleaner.languages.length > 0 && (
           <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">
             🌐 {cleaner.languages.join(', ')}

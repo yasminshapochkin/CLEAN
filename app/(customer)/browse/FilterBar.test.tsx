@@ -10,45 +10,104 @@ jest.mock('next/navigation', () => ({
 beforeEach(() => jest.clearAllMocks())
 
 describe('FilterBar', () => {
-  it('renders all four filter fields and search button', () => {
+  it('renders a checkbox for each day of the week plus an All Days checkbox', () => {
     render(<FilterBar />)
 
-    expect(screen.getByLabelText(/day/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/start time/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/end time/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/service type/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /sun/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /sat/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /all days/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('checkbox')).toHaveLength(8)
   })
 
-  it('day select contains all 7 days', () => {
-    render(<FilterBar />)
-    const daySelect = screen.getByLabelText(/day/i)
-
-    expect(daySelect).toContainElement(screen.getByRole('option', { name: 'Sunday' }))
-    expect(daySelect).toContainElement(screen.getByRole('option', { name: 'Saturday' }))
-  })
-
-  it('navigates to correct URL on submit', async () => {
+  it('selects every day when the All Days checkbox is clicked', async () => {
     const user = userEvent.setup()
     render(<FilterBar />)
 
-    await user.selectOptions(screen.getByLabelText(/day/i), '1')
-    await user.selectOptions(screen.getByLabelText(/start time/i), '09:00')
-    await user.selectOptions(screen.getByLabelText(/end time/i), '13:00')
+    const allDays = screen.getByRole('checkbox', { name: /all days/i })
+    expect(allDays).not.toBeChecked()
+
+    await user.click(allDays)
+
+    for (const day of ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']) {
+      expect(screen.getByRole('checkbox', { name: new RegExp(day, 'i') })).toBeChecked()
+    }
+    expect(allDays).toBeChecked()
+
+    await user.click(allDays)
+
+    for (const day of ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']) {
+      expect(screen.getByRole('checkbox', { name: new RegExp(day, 'i') })).not.toBeChecked()
+    }
+  })
+
+  it('renders a time of day select with all day, morning, noon, evening and night', () => {
+    render(<FilterBar />)
+
+    expect(screen.getByLabelText(/time of day/i)).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'All Day' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Morning' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Noon' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Evening' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Night' })).toBeInTheDocument()
+  })
+
+  it('renders service type, location fields and search button', () => {
+    render(<FilterBar />)
+
+    expect(screen.getByLabelText(/service type/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/location/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
+  })
+
+  it('navigates with selected days, time of day, type and location', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar />)
+
+    await user.click(screen.getByRole('checkbox', { name: /mon/i }))
+    await user.click(screen.getByRole('checkbox', { name: /wed/i }))
+    await user.selectOptions(screen.getByLabelText(/time of day/i), 'morning')
     await user.selectOptions(screen.getByLabelText(/service type/i), 'residential')
+    await user.type(screen.getByLabelText(/location/i), 'Tel Aviv')
     await user.click(screen.getByRole('button', { name: /search/i }))
 
     expect(mockPush).toHaveBeenCalledWith(
-      '/browse?day=1&start=09%3A00&end=13%3A00&type=residential'
+      '/browse?type=residential&days=1%2C3&timeOfDay=morning&location=Tel+Aviv'
     )
   })
 
-  it('pre-fills values from defaultValues prop', () => {
-    render(<FilterBar defaultValues={{ day: 2, start: '10:00', end: '14:00', type: 'commercial' }} />)
+  it('navigates without a days param when no day is selected', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar />)
 
-    expect(screen.getByLabelText<HTMLSelectElement>(/day/i).value).toBe('2')
-    expect(screen.getByLabelText<HTMLSelectElement>(/start time/i).value).toBe('10:00')
-    expect(screen.getByLabelText<HTMLSelectElement>(/end time/i).value).toBe('14:00')
+    await user.selectOptions(screen.getByLabelText(/time of day/i), 'evening')
+    await user.selectOptions(screen.getByLabelText(/service type/i), 'commercial')
+    await user.click(screen.getByRole('button', { name: /search/i }))
+
+    expect(mockPush).toHaveBeenCalledWith('/browse?type=commercial&timeOfDay=evening')
+  })
+
+  it('clears all filters and navigates to /browse when Clear is clicked', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa' }} />)
+
+    await user.click(screen.getByRole('button', { name: /clear/i }))
+
+    expect(mockPush).toHaveBeenCalledWith('/browse')
+    expect(screen.getByRole('checkbox', { name: /mon/i })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /wed/i })).not.toBeChecked()
+    expect(screen.getByLabelText<HTMLSelectElement>(/time of day/i).value).toBe('')
+    expect(screen.getByLabelText<HTMLSelectElement>(/service type/i).value).toBe('')
+    expect(screen.getByLabelText<HTMLInputElement>(/location/i).value).toBe('')
+  })
+
+  it('pre-fills values from defaultValues prop', () => {
+    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa' }} />)
+
+    expect(screen.getByRole('checkbox', { name: /mon/i })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /wed/i })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /sun/i })).not.toBeChecked()
+    expect(screen.getByLabelText<HTMLSelectElement>(/time of day/i).value).toBe('evening')
     expect(screen.getByLabelText<HTMLSelectElement>(/service type/i).value).toBe('commercial')
+    expect(screen.getByLabelText<HTMLInputElement>(/location/i).value).toBe('Haifa')
   })
 })
