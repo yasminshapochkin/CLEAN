@@ -9,9 +9,22 @@ jest.mock('next/navigation', () => ({
 
 beforeEach(() => jest.clearAllMocks())
 
+async function openDays(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /days/i }))
+}
+
 describe('FilterBar', () => {
-  it('renders a checkbox for each day of the week plus an All Days checkbox', () => {
+  it('hides the day checkboxes until the Days button is clicked', () => {
     render(<FilterBar />)
+
+    expect(screen.getByRole('button', { name: /days/i })).toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: /sun/i })).not.toBeInTheDocument()
+  })
+
+  it('renders a checkbox for each day of the week plus an All Days checkbox once opened', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar />)
+    await openDays(user)
 
     expect(screen.getByRole('checkbox', { name: /sun/i })).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /sat/i })).toBeInTheDocument()
@@ -19,9 +32,21 @@ describe('FilterBar', () => {
     expect(screen.getAllByRole('checkbox')).toHaveLength(8)
   })
 
+  it('toggles the days panel closed when the Days button is clicked again', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar />)
+
+    await openDays(user)
+    expect(screen.getByRole('checkbox', { name: /sun/i })).toBeInTheDocument()
+
+    await openDays(user)
+    expect(screen.queryByRole('checkbox', { name: /sun/i })).not.toBeInTheDocument()
+  })
+
   it('selects every day when the All Days checkbox is clicked', async () => {
     const user = userEvent.setup()
     render(<FilterBar />)
+    await openDays(user)
 
     const allDays = screen.getByRole('checkbox', { name: /all days/i })
     expect(allDays).not.toBeChecked()
@@ -38,6 +63,17 @@ describe('FilterBar', () => {
     for (const day of ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']) {
       expect(screen.getByRole('checkbox', { name: new RegExp(day, 'i') })).not.toBeChecked()
     }
+  })
+
+  it('shows the number of selected days on the Days button', async () => {
+    const user = userEvent.setup()
+    render(<FilterBar />)
+    await openDays(user)
+
+    await user.click(screen.getByRole('checkbox', { name: /mon/i }))
+    await user.click(screen.getByRole('checkbox', { name: /wed/i }))
+
+    expect(screen.getByRole('button', { name: /days \(2\)/i })).toBeInTheDocument()
   })
 
   it('renders a time of day select with all day, morning, noon, evening and night', () => {
@@ -63,6 +99,7 @@ describe('FilterBar', () => {
     const user = userEvent.setup()
     render(<FilterBar />)
 
+    await openDays(user)
     await user.click(screen.getByRole('checkbox', { name: /mon/i }))
     await user.click(screen.getByRole('checkbox', { name: /wed/i }))
     await user.selectOptions(screen.getByLabelText(/time of day/i), 'morning')
@@ -93,6 +130,7 @@ describe('FilterBar', () => {
     await user.click(screen.getByRole('button', { name: /clear/i }))
 
     expect(mockPush).toHaveBeenCalledWith('/browse')
+    await openDays(user)
     expect(screen.getByRole('checkbox', { name: /mon/i })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: /wed/i })).not.toBeChecked()
     expect(screen.getByLabelText<HTMLSelectElement>(/time of day/i).value).toBe('')
@@ -100,9 +138,13 @@ describe('FilterBar', () => {
     expect(screen.getByLabelText<HTMLInputElement>(/location/i).value).toBe('')
   })
 
-  it('pre-fills values from defaultValues prop', () => {
+  it('pre-fills values from defaultValues prop', async () => {
+    const user = userEvent.setup()
     render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa' }} />)
 
+    expect(screen.getByRole('button', { name: /days \(2\)/i })).toBeInTheDocument()
+
+    await openDays(user)
     expect(screen.getByRole('checkbox', { name: /mon/i })).toBeChecked()
     expect(screen.getByRole('checkbox', { name: /wed/i })).toBeChecked()
     expect(screen.getByRole('checkbox', { name: /sun/i })).not.toBeChecked()

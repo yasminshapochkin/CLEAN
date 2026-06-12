@@ -19,6 +19,7 @@ type Props = {
 export function FilterBar({ defaultValues }: Props) {
   const router = useRouter()
   const [days, setDays] = useState<number[]>(defaultValues?.days ?? [])
+  const [daysOpen, setDaysOpen] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(defaultValues?.timeOfDay ?? '')
   const [type, setType] = useState(defaultValues?.type ?? '')
   const [location, setLocation] = useState(defaultValues?.location ?? '')
@@ -52,33 +53,43 @@ export function FilterBar({ defaultValues }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-4 items-end p-4 bg-white border-b border-gray-200 flex-wrap">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 relative">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Days</span>
-        <div className="flex gap-1.5">
-          <label className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1.5 cursor-pointer hover:bg-indigo-50 has-[:checked]:bg-indigo-100 has-[:checked]:border-indigo-400">
-            <input
-              type="checkbox"
-              checked={days.length === DAYS.length}
-              onChange={toggleAllDays}
-              className="accent-indigo-600"
-            />
-            All Days
-          </label>
-          {DAYS.map((d, i) => (
-            <label
-              key={i}
-              className="flex items-center gap-1 text-sm border border-gray-300 rounded-md px-2 py-1.5 cursor-pointer hover:bg-indigo-50 has-[:checked]:bg-indigo-100 has-[:checked]:border-indigo-400"
-            >
+        <button
+          type="button"
+          onClick={() => setDaysOpen(o => !o)}
+          aria-expanded={daysOpen}
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]"
+        >
+          Days{days.length > 0 && ` (${days.length})`}
+        </button>
+        {daysOpen && (
+          <div className="absolute z-10 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2 flex flex-col gap-1 min-w-[140px]">
+            <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-indigo-50 rounded px-1.5 py-1">
               <input
                 type="checkbox"
-                checked={days.includes(i)}
-                onChange={() => toggleDay(i)}
+                checked={days.length === DAYS.length}
+                onChange={toggleAllDays}
                 className="accent-indigo-600"
               />
-              {d}
+              All Days
             </label>
-          ))}
-        </div>
+            {DAYS.map((d, i) => (
+              <label
+                key={i}
+                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-indigo-50 rounded px-1.5 py-1"
+              >
+                <input
+                  type="checkbox"
+                  checked={days.includes(i)}
+                  onChange={() => toggleDay(i)}
+                  className="accent-indigo-600"
+                />
+                {d}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
