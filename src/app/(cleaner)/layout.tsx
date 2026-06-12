@@ -1,16 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { signOut } from "@/app/(auth)/actions";
+import NavLinks from "./NavLinks";
 import type { Profile, Cleaner } from "@/types/database";
-
-const navLinks = [
-  { href: "/cleaner/dashboard", label: "Dashboard" },
-  { href: "/cleaner/requests", label: "Requests" },
-  { href: "/cleaner/availability", label: "Availability" },
-  { href: "/cleaner/profile", label: "Profile" },
-  { href: "/cleaner/preview", label: "Preview" },
-];
 
 export default async function CleanerLayout({
   children,
@@ -52,17 +44,7 @@ export default async function CleanerLayout({
         <div className="px-5 py-5 border-b border-gray-100">
           <span className="text-lg font-bold text-blue-600">Clean</span>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex items-center px-3 py-2 text-base text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <NavLinks />
         <div className="px-4 py-4 border-t border-gray-100 space-y-2">
           <div className="text-base font-medium text-gray-900 truncate">
             {profile.full_name ?? user.email}
