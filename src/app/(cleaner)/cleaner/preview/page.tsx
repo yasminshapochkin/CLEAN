@@ -40,19 +40,16 @@ export default async function PreviewPage() {
         </Link>
       </div>
 
-      {/* Cover */}
-      <div className="h-52 bg-gradient-to-r from-blue-500 to-blue-700 w-full" />
-
       {/* Avatar + name row */}
-      <div className="bg-white border-b border-gray-200 px-10 pb-5">
-        <div className="flex items-end gap-6 -mt-14">
-          <div className="w-32 h-32 rounded-full bg-gray-200 border-4 border-white overflow-hidden shrink-0 shadow">
+      <div className="bg-white border-b border-gray-200 px-10 py-6">
+        <div className="flex items-center gap-6">
+          <div className="w-48 h-48 rounded-full bg-gray-200 border-4 border-white overflow-hidden shrink-0 shadow">
             {profile?.avatar_url ? (
               <Image
                 src={profile.avatar_url}
                 alt="Profile photo"
-                width={128}
-                height={128}
+                width={192}
+                height={192}
                 className="object-cover w-full h-full"
               />
             ) : (
@@ -61,7 +58,7 @@ export default async function PreviewPage() {
               </div>
             )}
           </div>
-          <div className="pb-1">
+          <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {profile?.full_name ?? "No name set"}
             </h1>
@@ -99,26 +96,25 @@ export default async function PreviewPage() {
             {(slots ?? []).length === 0 ? (
               <p className="text-base text-gray-400">No availability set yet.</p>
             ) : (
-              <div className="space-y-3">
-                {DAYS.map((day, i) => {
-                  const daySlots = slotsByDay[i];
-                  if (daySlots.length === 0) return null;
-                  return (
-                    <div key={day} className="flex items-start gap-4">
-                      <span className="w-32 text-base font-semibold text-gray-700 shrink-0">{day}</span>
-                      <div className="flex flex-wrap gap-2">
-                        {daySlots.map((slot) => (
-                          <span
-                            key={slot.id}
-                            className="bg-blue-50 text-blue-700 text-base px-3 py-1 rounded-lg"
-                          >
-                            {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
-                          </span>
-                        ))}
-                      </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                {DAYS.map((day, i) => (
+                  <div key={day} className={`rounded-xl border p-4 min-h-[120px] flex flex-col ${slotsByDay[i].length === 0 ? "bg-red-50 border-red-100" : "bg-gray-50 border-gray-200"}`}>
+                    <div className="text-base font-bold text-gray-700 mb-3">{day}</div>
+                    <div className="flex-1 space-y-2">
+                      {slotsByDay[i].length === 0 ? (
+                        <p className="text-base text-gray-300">—</p>
+                      ) : (
+                        slotsByDay[i].map((slot) => (
+                          <div key={slot.id} className="bg-blue-50 rounded-lg px-3 py-2">
+                            <span className="text-base font-medium text-blue-700">
+                              {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
