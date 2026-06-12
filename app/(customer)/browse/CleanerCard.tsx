@@ -16,7 +16,7 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
       : cleaner.service_types[0] ?? 'residential'
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
       <div className="flex items-center gap-3 mb-3">
         {cleaner.avatar_url ? (
           <img
