@@ -16,6 +16,14 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
   cancelled: 'Cancelled',
 }
 
+const STATUS_ACCENT: Record<BookingStatus, string> = {
+  pending: 'border-t-yellow-400',
+  accepted: 'border-t-green-400',
+  declined: 'border-t-red-400',
+  completed: 'border-t-blue-400',
+  cancelled: 'border-t-gray-300',
+}
+
 const SERVICE_BADGE: Record<BookingResult['service_type'], string> = {
   residential: 'bg-indigo-100 text-indigo-700',
   commercial: 'bg-green-100 text-green-700',
@@ -35,7 +43,7 @@ export function BookingCard({ booking }: { booking: BookingResult }) {
   const serviceLabel = booking.service_type.charAt(0).toUpperCase() + booking.service_type.slice(1)
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-lg transition-shadow">
+    <div className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 border-t-4 ${STATUS_ACCENT[booking.status]} hover:shadow-lg transition-shadow`}>
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3">
           {booking.cleaner_avatar_url ? (

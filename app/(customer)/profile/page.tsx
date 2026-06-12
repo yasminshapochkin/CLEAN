@@ -26,7 +26,9 @@ export default async function ProfilePage() {
       </nav>
 
       <div className="px-6 py-6">
-        <h1 className="text-xl font-bold text-gray-900 mb-4">My Profile</h1>
+        <h1 className="text-xl font-bold mb-4">
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">My Profile</span>
+        </h1>
         <ProfileForm defaultValues={profile} />
       </div>
     </div>
