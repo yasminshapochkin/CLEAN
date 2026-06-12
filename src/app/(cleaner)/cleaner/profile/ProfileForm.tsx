@@ -39,7 +39,7 @@ export default function ProfileForm({ profile, cleaner }: Props) {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Profile photo</label>
+          <label className="block text-base font-medium text-gray-700 mb-1">Profile photo</label>
           <input
             type="file"
             name="avatar"
@@ -48,45 +48,45 @@ export default function ProfileForm({ profile, cleaner }: Props) {
               const file = e.target.files?.[0];
               if (file) setAvatarPreview(URL.createObjectURL(file));
             }}
-            className="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+            className="text-base text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-base file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+          <label className="block text-base font-medium text-gray-700 mb-1">Full name</label>
           <input
             type="text"
             name="full_name"
             defaultValue={profile?.full_name ?? ""}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <label className="block text-base font-medium text-gray-700 mb-1">Phone</label>
           <input
             type="tel"
             name="phone"
             defaultValue={profile?.phone ?? ""}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+        <label className="block text-base font-medium text-gray-700 mb-1">Bio</label>
         <textarea
           name="bio"
           rows={3}
           defaultValue={cleaner?.bio ?? ""}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-base font-medium text-gray-700 mb-1">
             Hourly rate (£)
           </label>
           <input
@@ -95,11 +95,11 @@ export default function ProfileForm({ profile, cleaner }: Props) {
             min="0"
             step="0.50"
             defaultValue={cleaner?.hourly_rate ?? ""}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-base font-medium text-gray-700 mb-1">
             Service radius (km)
           </label>
           <input
@@ -108,16 +108,16 @@ export default function ProfileForm({ profile, cleaner }: Props) {
             min="1"
             max="100"
             defaultValue={cleaner?.service_radius_km ?? 10}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Service types</label>
+        <label className="block text-base font-medium text-gray-700 mb-2">Service types</label>
         <div className="flex gap-4">
           {(["residential", "commercial"] as const).map((type) => (
-            <label key={type} className="flex items-center gap-2 text-sm text-gray-700">
+            <label key={type} className="flex items-center gap-2 text-base text-gray-700">
               <input
                 type="checkbox"
                 name="service_types"
@@ -132,14 +132,14 @@ export default function ProfileForm({ profile, cleaner }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-base font-medium text-gray-700 mb-1">
           Service area address
         </label>
         <input
           type="text"
           name="address"
           placeholder="e.g. Shoreditch, London"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p className="text-xs text-gray-400 mt-1">
           Used to calculate your service coverage area.
@@ -148,7 +148,7 @@ export default function ProfileForm({ profile, cleaner }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-base font-medium text-gray-700 mb-1">
             Years of experience
           </label>
           <input
@@ -157,11 +157,11 @@ export default function ProfileForm({ profile, cleaner }: Props) {
             min="0"
             max="50"
             defaultValue={cleaner?.years_experience ?? 0}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-base font-medium text-gray-700 mb-1">
             Languages (comma-separated)
           </label>
           <input
@@ -169,14 +169,14 @@ export default function ProfileForm({ profile, cleaner }: Props) {
             name="languages"
             defaultValue={cleaner?.languages?.join(", ") ?? ""}
             placeholder="English, French"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
       {message && (
         <p
-          className={`text-sm rounded-lg px-3 py-2 ${
+          className={`text-base rounded-lg px-3 py-2 ${
             message.type === "success"
               ? "bg-green-50 text-green-700"
               : "bg-red-50 text-red-600"
@@ -189,7 +189,7 @@ export default function ProfileForm({ profile, cleaner }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        className="bg-blue-600 text-white rounded-lg px-5 py-2.5 text-base font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
         {loading ? "Saving..." : "Save profile"}
       </button>

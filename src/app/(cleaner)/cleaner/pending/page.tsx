@@ -4,7 +4,7 @@ export default function PendingApprovalPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow p-8 text-center">
         <div className="text-5xl mb-4">⏳</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Application submitted</h1>
-        <p className="text-gray-500 text-sm">
+        <p className="text-gray-500 text-base">
           Our team is reviewing your application and ID document. You&apos;ll receive
           an email once it&apos;s approved — usually within 1–2 business days.
         </p>

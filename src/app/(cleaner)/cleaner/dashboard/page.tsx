@@ -24,7 +24,7 @@ export default async function CleanerDashboardPage() {
         <div className="text-center">
           <div className="text-4xl mb-3">⏳</div>
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Application under review</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-base text-gray-500">
             You&apos;ll receive an email once your application is approved.
           </p>
         </div>
@@ -38,7 +38,7 @@ export default async function CleanerDashboardPage() {
         <div className="text-center">
           <div className="text-4xl mb-3">❌</div>
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Application not approved</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-base text-gray-500">
             Please contact support for more information.
           </p>
         </div>
@@ -52,7 +52,7 @@ export default async function CleanerDashboardPage() {
         <div className="text-center">
           <div className="text-4xl mb-3">🚫</div>
           <h2 className="text-xl font-semibold text-gray-800 mb-1">Account suspended</h2>
-          <p className="text-sm text-gray-500">Contact support to resolve this.</p>
+          <p className="text-base text-gray-500">Contact support to resolve this.</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ export default async function CleanerDashboardPage() {
       {/* Pending requests */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide">
             New requests{" "}
             {pendingBookings && pendingBookings.length > 0 && (
               <span className="ml-1.5 bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
@@ -110,7 +110,7 @@ export default async function CleanerDashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 py-8 text-center text-gray-400 text-sm">
+          <div className="bg-white rounded-xl border border-gray-200 py-8 text-center text-gray-400 text-base">
             No pending requests right now.
           </div>
         )}
@@ -118,7 +118,7 @@ export default async function CleanerDashboardPage() {
 
       {/* Upcoming jobs */}
       <section>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Upcoming jobs
         </h2>
 
@@ -130,13 +130,13 @@ export default async function CleanerDashboardPage() {
                 className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between"
               >
                 <div>
-                  <div className="font-medium text-sm text-gray-900">
+                  <div className="font-medium text-base text-gray-900">
                     {b.profiles?.full_name ?? "Customer"}
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">{b.address}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-gray-900">{b.scheduled_date}</div>
+                  <div className="text-base font-medium text-gray-900">{b.scheduled_date}</div>
                   <div className="text-xs text-gray-500">
                     {b.scheduled_start?.slice(0, 5)} · {b.duration_hours}h
                   </div>
@@ -145,7 +145,7 @@ export default async function CleanerDashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 py-8 text-center text-gray-400 text-sm">
+          <div className="bg-white rounded-xl border border-gray-200 py-8 text-center text-gray-400 text-base">
             No upcoming jobs.
           </div>
         )}

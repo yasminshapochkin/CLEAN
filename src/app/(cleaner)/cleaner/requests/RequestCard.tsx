@@ -57,7 +57,7 @@ export default function RequestCard({ booking, showActions }: Props) {
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="font-medium text-gray-900 text-sm">
+          <div className="font-medium text-gray-900 text-base">
             {booking.profiles?.full_name ?? "Customer"}
           </div>
           <div className="text-xs text-gray-500 mt-0.5">{booking.address}</div>
@@ -110,14 +110,14 @@ export default function RequestCard({ booking, showActions }: Props) {
           <button
             onClick={() => handleRespond("accepted")}
             disabled={!!loading}
-            className="flex-1 bg-green-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+            className="flex-1 bg-green-600 text-white rounded-lg py-2 text-base font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
             {loading === "accepted" ? "Accepting..." : "Accept"}
           </button>
           <button
             onClick={() => handleRespond("declined")}
             disabled={!!loading}
-            className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-sm hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-base hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             {loading === "declined" ? "Declining..." : "Decline"}
           </button>

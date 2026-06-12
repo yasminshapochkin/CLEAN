@@ -121,7 +121,7 @@ export default function CleanerOnboardingPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
           </svg>
-          <p className="text-sm font-medium text-gray-600">Submitting application…</p>
+          <p className="text-base font-medium text-gray-600">Submitting application…</p>
         </div>
       )}
       <div className="w-full max-w-lg bg-white rounded-2xl shadow p-8">
@@ -129,7 +129,7 @@ export default function CleanerOnboardingPage() {
           type="button"
           onClick={() => router.push("/register")}
           disabled={loading}
-          className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-5 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1 text-base text-gray-400 hover:text-gray-600 mb-5 transition-colors disabled:opacity-50"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -138,66 +138,66 @@ export default function CleanerOnboardingPage() {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Cleaner application</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-base text-gray-500 mb-6">
           Fill in your details. Our team will review your application within 1–2 business days.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+              <label className="block text-base font-medium text-gray-700 mb-1">Full name</label>
               <input
                 type="text"
                 name="full_name"
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-base font-medium text-gray-700 mb-1">Phone</label>
               <input
                 type="tel"
                 name="phone"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+            <label className="block text-base font-medium text-gray-700 mb-1">Bio</label>
             <textarea
               name="bio"
               rows={3}
               placeholder="Tell customers about your experience and approach..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Years of experience</label>
+              <label className="block text-base font-medium text-gray-700 mb-1">Years of experience</label>
               <input
                 type="number"
                 name="years_experience"
                 min="0"
                 max="50"
                 defaultValue="0"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Languages (comma-separated)</label>
+              <label className="block text-base font-medium text-gray-700 mb-1">Languages (comma-separated)</label>
               <input
                 type="text"
                 name="languages"
                 placeholder="English, Spanish"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-base font-medium text-gray-700 mb-1">
               ID document <span className="text-gray-400">(passport, national ID)</span>
             </label>
             <input
@@ -205,19 +205,19 @@ export default function CleanerOnboardingPage() {
               name="id_document"
               accept=".pdf,.jpg,.jpeg,.png"
               required
-              className="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+              className="w-full text-base text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-base file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
             />
             <p className="text-xs text-gray-400 mt-1">PDF, JPG, or PNG. Stored securely.</p>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-base text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading || !creds}
-            className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+            className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-base font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
           >
             {loading ? <><Spinner />Submitting…</> : "Submit application"}
           </button>

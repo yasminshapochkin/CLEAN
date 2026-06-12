@@ -28,13 +28,13 @@ export default async function RequestsPage() {
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Requests</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-base text-gray-500 mb-6">
         Respond to pending requests within 24 hours.
       </p>
 
       {pending.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Awaiting response ({pending.length})
           </h2>
           <div className="space-y-3">
@@ -47,7 +47,7 @@ export default async function RequestsPage() {
 
       {past.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Past requests
           </h2>
           <div className="space-y-3">
@@ -61,7 +61,7 @@ export default async function RequestsPage() {
       {(!bookings || bookings.length === 0) && (
         <div className="text-center py-16 text-gray-400">
           <div className="text-4xl mb-3">📬</div>
-          <p className="text-sm">No booking requests yet.</p>
+          <p className="text-base">No booking requests yet.</p>
         </div>
       )}
     </div>

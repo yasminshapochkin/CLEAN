@@ -56,14 +56,14 @@ export default async function CleanerLayout({
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center px-3 py-2 text-base text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
             >
               {link.label}
             </Link>
           ))}
         </nav>
         <div className="px-4 py-4 border-t border-gray-100 space-y-2">
-          <div className="text-sm font-medium text-gray-900 truncate">
+          <div className="text-base font-medium text-gray-900 truncate">
             {profile.full_name ?? user.email}
           </div>
           {cleaner && (

@@ -97,7 +97,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
       </div>
 
       {error && (
-        <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <p className="mt-3 text-base text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
       )}
 
       {/* Add time block modal */}
@@ -109,12 +109,12 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
             </h2>
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start time</label>
+                <label className="block text-base font-medium text-gray-700 mb-1">Start time</label>
                 <div className="flex gap-2">
                   <select
                     value={startHour}
                     onChange={(e) => setStartHour(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
                       <option key={h} value={h}>{h}:00</option>
@@ -123,7 +123,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                   <select
                     value={startMin}
                     onChange={(e) => setStartMin(e.target.value)}
-                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {["00", "15", "30", "45"].map((m) => (
                       <option key={m} value={m}>:{m}</option>
@@ -132,12 +132,12 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End time</label>
+                <label className="block text-base font-medium text-gray-700 mb-1">End time</label>
                 <div className="flex gap-2">
                   <select
                     value={endHour}
                     onChange={(e) => setEndHour(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
                       <option key={h} value={h}>{h}:00</option>
@@ -146,7 +146,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                   <select
                     value={endMin}
                     onChange={(e) => setEndMin(e.target.value)}
-                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {["00", "15", "30", "45"].map((m) => (
                       <option key={m} value={m}>:{m}</option>
@@ -155,20 +155,20 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                 </div>
               </div>
               {error && (
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-base text-red-600">{error}</p>
               )}
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => { setModal({ open: false, day: 0 }); setError(null); }}
-                  className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-sm hover:bg-gray-50"
+                  className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2 text-base hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-base font-medium hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? "Adding..." : "Add"}
                 </button>

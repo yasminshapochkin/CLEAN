@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/(cleaner)/cleaner/availability/page": [
+    "/(cleaner)/cleaner/profile/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/cleaner/availability/page.js"
+      "static/chunks/app/(cleaner)/cleaner/profile/page.js"
     ],
     "/(cleaner)/layout": [
       "static/chunks/webpack.js",
@@ -16,6 +16,11 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/(cleaner)/cleaner/requests/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/requests/page.js"
+    ],
     "/(cleaner)/cleaner/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -25,11 +30,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(cleaner)/cleaner/dashboard/loading.js"
-    ],
-    "/(cleaner)/cleaner/profile/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/cleaner/profile/page.js"
     ]
   }
 }
