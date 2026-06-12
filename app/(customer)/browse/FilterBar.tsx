@@ -5,7 +5,6 @@ import { useState } from 'react'
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const TIME_OF_DAY = [
-  { value: 'all_day', label: 'All Day' },
   { value: 'morning', label: 'Morning' },
   { value: 'noon', label: 'Noon' },
   { value: 'evening', label: 'Evening' },
@@ -20,14 +19,15 @@ const SORT_OPTIONS = [
 ]
 
 type Props = {
-  defaultValues?: { days?: number[]; timeOfDay?: string; type: string; location?: string; sort?: string }
+  defaultValues?: { days?: number[]; timeOfDay?: string[]; type: string; location?: string; sort?: string }
 }
 
 export function FilterBar({ defaultValues }: Props) {
   const router = useRouter()
   const [days, setDays] = useState<number[]>(defaultValues?.days ?? [])
   const [daysOpen, setDaysOpen] = useState(false)
-  const [timeOfDay, setTimeOfDay] = useState(defaultValues?.timeOfDay ?? '')
+  const [timeOfDay, setTimeOfDay] = useState<string[]>(defaultValues?.timeOfDay ?? [])
+  const [timeOpen, setTimeOpen] = useState(false)
   const [type, setType] = useState(defaultValues?.type ?? '')
   const [location, setLocation] = useState(defaultValues?.location ?? '')
   const [sort, setSort] = useState(defaultValues?.sort ?? '')
@@ -42,11 +42,25 @@ export function FilterBar({ defaultValues }: Props) {
     setDays(prev => (prev.length === DAYS.length ? [] : DAYS.map((_, i) => i)))
   }
 
+  function toggleTime(value: string) {
+    setTimeOfDay(prev =>
+      prev.includes(value)
+        ? prev.filter(t => t !== value)
+        : [...prev, value].sort(
+            (a, b) => TIME_OF_DAY.findIndex(t => t.value === a) - TIME_OF_DAY.findIndex(t => t.value === b)
+          )
+    )
+  }
+
+  function toggleAllTimes() {
+    setTimeOfDay(prev => (prev.length === TIME_OF_DAY.length ? [] : TIME_OF_DAY.map(t => t.value)))
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const params = new URLSearchParams({ type })
     if (days.length > 0) params.set('days', days.join(','))
-    if (timeOfDay) params.set('timeOfDay', timeOfDay)
+    if (timeOfDay.length > 0) params.set('timeOfDay', timeOfDay.join(','))
     if (location) params.set('location', location)
     if (sort) params.set('sort', sort)
     router.push(`/browse?${params}`)
@@ -54,7 +68,7 @@ export function FilterBar({ defaultValues }: Props) {
 
   function handleClear() {
     setDays([])
-    setTimeOfDay('')
+    setTimeOfDay([])
     setType('')
     setLocation('')
     setSort('')
@@ -102,13 +116,43 @@ export function FilterBar({ defaultValues }: Props) {
         )}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="timeOfDay" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time of Day</label>
-        <select id="timeOfDay" value={timeOfDay} onChange={e => setTimeOfDay(e.target.value)} required
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Select time</option>
-          {TIME_OF_DAY.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
+      <div className="flex flex-col gap-1 relative">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time of Day</span>
+        <button
+          type="button"
+          onClick={() => setTimeOpen(o => !o)}
+          aria-expanded={timeOpen}
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[120px]"
+        >
+          Time of Day{timeOfDay.length > 0 && ` (${timeOfDay.length})`}
+        </button>
+        {timeOpen && (
+          <div className="absolute z-10 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2 flex flex-col gap-1 min-w-[140px]">
+            <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-indigo-50 rounded px-1.5 py-1">
+              <input
+                type="checkbox"
+                checked={timeOfDay.length === TIME_OF_DAY.length}
+                onChange={toggleAllTimes}
+                className="accent-indigo-600"
+              />
+              Anytime
+            </label>
+            {TIME_OF_DAY.map(t => (
+              <label
+                key={t.value}
+                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-indigo-50 rounded px-1.5 py-1"
+              >
+                <input
+                  type="checkbox"
+                  checked={timeOfDay.includes(t.value)}
+                  onChange={() => toggleTime(t.value)}
+                  className="accent-indigo-600"
+                />
+                {t.label}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

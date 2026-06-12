@@ -11,7 +11,7 @@ type Props = {
 
 export default async function BrowsePage({ searchParams }: Props) {
   const { days, timeOfDay, type, location, sort } = searchParams
-  const hasFilters = type !== undefined && timeOfDay !== undefined
+  const hasFilters = type !== undefined
 
   const cleaners = hasFilters ? sortCleaners(filterByLocation(MOCK_CLEANERS, location ?? ''), sort ?? '') : null
   const error = null
@@ -26,7 +26,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         </div>
       </nav>
 
-      <FilterBar defaultValues={hasFilters ? { days: days ? days.split(',').map(Number) : [], timeOfDay, type: type!, location, sort } : undefined} />
+      <FilterBar defaultValues={hasFilters ? { days: days ? days.split(',').map(Number) : [], timeOfDay: timeOfDay ? timeOfDay.split(',') : [], type: type!, location, sort } : undefined} />
 
       <div className="px-6 py-6">
         {error && (
