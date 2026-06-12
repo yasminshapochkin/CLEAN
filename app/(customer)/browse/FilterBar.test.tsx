@@ -95,7 +95,18 @@ describe('FilterBar', () => {
     expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
   })
 
-  it('navigates with selected days, time of day, type and location', async () => {
+  it('renders a sort select with price and experience options', () => {
+    render(<FilterBar />)
+
+    const sort = screen.getByLabelText(/sort by/i)
+    expect(sort).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Price: Low to High' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Price: High to Low' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Experience: High to Low' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Experience: Low to High' })).toBeInTheDocument()
+  })
+
+  it('navigates with selected days, time of day, type, location and sort', async () => {
     const user = userEvent.setup()
     render(<FilterBar />)
 
@@ -105,14 +116,15 @@ describe('FilterBar', () => {
     await user.selectOptions(screen.getByLabelText(/time of day/i), 'morning')
     await user.selectOptions(screen.getByLabelText(/service type/i), 'residential')
     await user.type(screen.getByLabelText(/location/i), 'Tel Aviv')
+    await user.selectOptions(screen.getByLabelText(/sort by/i), 'price_asc')
     await user.click(screen.getByRole('button', { name: /search/i }))
 
     expect(mockPush).toHaveBeenCalledWith(
-      '/browse?type=residential&days=1%2C3&timeOfDay=morning&location=Tel+Aviv'
+      '/browse?type=residential&days=1%2C3&timeOfDay=morning&location=Tel+Aviv&sort=price_asc'
     )
   })
 
-  it('navigates without a days param when no day is selected', async () => {
+  it('navigates without a days or sort param when neither is selected', async () => {
     const user = userEvent.setup()
     render(<FilterBar />)
 
@@ -125,7 +137,7 @@ describe('FilterBar', () => {
 
   it('clears all filters and navigates to /browse when Clear is clicked', async () => {
     const user = userEvent.setup()
-    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa' }} />)
+    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa', sort: 'price_asc' }} />)
 
     await user.click(screen.getByRole('button', { name: /clear/i }))
 
@@ -136,11 +148,12 @@ describe('FilterBar', () => {
     expect(screen.getByLabelText<HTMLSelectElement>(/time of day/i).value).toBe('')
     expect(screen.getByLabelText<HTMLSelectElement>(/service type/i).value).toBe('')
     expect(screen.getByLabelText<HTMLInputElement>(/location/i).value).toBe('')
+    expect(screen.getByLabelText<HTMLSelectElement>(/sort by/i).value).toBe('')
   })
 
   it('pre-fills values from defaultValues prop', async () => {
     const user = userEvent.setup()
-    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa' }} />)
+    render(<FilterBar defaultValues={{ days: [1, 3], timeOfDay: 'evening', type: 'commercial', location: 'Haifa', sort: 'experience_desc' }} />)
 
     expect(screen.getByRole('button', { name: /days \(2\)/i })).toBeInTheDocument()
 
@@ -151,5 +164,6 @@ describe('FilterBar', () => {
     expect(screen.getByLabelText<HTMLSelectElement>(/time of day/i).value).toBe('evening')
     expect(screen.getByLabelText<HTMLSelectElement>(/service type/i).value).toBe('commercial')
     expect(screen.getByLabelText<HTMLInputElement>(/location/i).value).toBe('Haifa')
+    expect(screen.getByLabelText<HTMLSelectElement>(/sort by/i).value).toBe('experience_desc')
   })
 })

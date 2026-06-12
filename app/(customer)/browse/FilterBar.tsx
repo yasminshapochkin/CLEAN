@@ -12,8 +12,15 @@ const TIME_OF_DAY = [
   { value: 'night', label: 'Night' },
 ]
 
+const SORT_OPTIONS = [
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'experience_desc', label: 'Experience: High to Low' },
+  { value: 'experience_asc', label: 'Experience: Low to High' },
+]
+
 type Props = {
-  defaultValues?: { days?: number[]; timeOfDay?: string; type: string; location?: string }
+  defaultValues?: { days?: number[]; timeOfDay?: string; type: string; location?: string; sort?: string }
 }
 
 export function FilterBar({ defaultValues }: Props) {
@@ -23,6 +30,7 @@ export function FilterBar({ defaultValues }: Props) {
   const [timeOfDay, setTimeOfDay] = useState(defaultValues?.timeOfDay ?? '')
   const [type, setType] = useState(defaultValues?.type ?? '')
   const [location, setLocation] = useState(defaultValues?.location ?? '')
+  const [sort, setSort] = useState(defaultValues?.sort ?? '')
 
   function toggleDay(i: number) {
     setDays(prev =>
@@ -40,6 +48,7 @@ export function FilterBar({ defaultValues }: Props) {
     if (days.length > 0) params.set('days', days.join(','))
     if (timeOfDay) params.set('timeOfDay', timeOfDay)
     if (location) params.set('location', location)
+    if (sort) params.set('sort', sort)
     router.push(`/browse?${params}`)
   }
 
@@ -48,6 +57,7 @@ export function FilterBar({ defaultValues }: Props) {
     setTimeOfDay('')
     setType('')
     setLocation('')
+    setSort('')
     router.push('/browse')
   }
 
@@ -117,6 +127,15 @@ export function FilterBar({ defaultValues }: Props) {
         <input id="location" type="text" value={location} onChange={e => setLocation(e.target.value)}
           placeholder="e.g. Tel Aviv"
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="sort" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sort By</label>
+        <select id="sort" value={sort} onChange={e => setSort(e.target.value)}
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Default</option>
+          {SORT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
       </div>
 
       <div className="flex gap-2">

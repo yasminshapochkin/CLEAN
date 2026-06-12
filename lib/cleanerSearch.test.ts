@@ -1,4 +1,4 @@
-import { filterByLocation } from './cleanerSearch'
+import { filterByLocation, sortCleaners } from './cleanerSearch'
 import type { CleanerResult } from './types/cleaner'
 
 const cleaners: CleanerResult[] = [
@@ -20,5 +20,37 @@ describe('filterByLocation', () => {
 
   it('returns an empty array when no cleaners match', () => {
     expect(filterByLocation(cleaners, 'Jerusalem')).toEqual([])
+  })
+})
+
+describe('sortCleaners', () => {
+  it('returns cleaners in original order when sort is empty', () => {
+    expect(sortCleaners(cleaners, '')).toEqual(cleaners)
+  })
+
+  it('sorts by price ascending', () => {
+    const result = sortCleaners(cleaners, 'price_asc')
+    expect(result.map(c => c.id)).toEqual(['3', '1', '2'])
+  })
+
+  it('sorts by price descending', () => {
+    const result = sortCleaners(cleaners, 'price_desc')
+    expect(result.map(c => c.id)).toEqual(['2', '1', '3'])
+  })
+
+  it('sorts by experience ascending', () => {
+    const result = sortCleaners(cleaners, 'experience_asc')
+    expect(result.map(c => c.id)).toEqual(['3', '1', '2'])
+  })
+
+  it('sorts by experience descending', () => {
+    const result = sortCleaners(cleaners, 'experience_desc')
+    expect(result.map(c => c.id)).toEqual(['2', '1', '3'])
+  })
+
+  it('does not mutate the input array', () => {
+    const original = [...cleaners]
+    sortCleaners(cleaners, 'price_asc')
+    expect(cleaners).toEqual(original)
   })
 })

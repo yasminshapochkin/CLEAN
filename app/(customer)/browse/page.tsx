@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { FilterBar } from './FilterBar'
 import { CleanerCard } from './CleanerCard'
-import { filterByLocation } from '@/lib/cleanerSearch'
+import { filterByLocation, sortCleaners } from '@/lib/cleanerSearch'
 import type { CleanerResult } from '@/lib/types/cleaner'
 
 const MOCK_CLEANERS: CleanerResult[] = [
@@ -15,14 +15,14 @@ const MOCK_CLEANERS: CleanerResult[] = [
 ]
 
 type Props = {
-  searchParams: { days?: string; timeOfDay?: string; type?: string; location?: string }
+  searchParams: { days?: string; timeOfDay?: string; type?: string; location?: string; sort?: string }
 }
 
 export default async function BrowsePage({ searchParams }: Props) {
-  const { days, timeOfDay, type, location } = searchParams
+  const { days, timeOfDay, type, location, sort } = searchParams
   const hasFilters = type !== undefined && timeOfDay !== undefined
 
-  const cleaners = hasFilters ? filterByLocation(MOCK_CLEANERS, location ?? '') : null
+  const cleaners = hasFilters ? sortCleaners(filterByLocation(MOCK_CLEANERS, location ?? ''), sort ?? '') : null
   const error = null
 
   return (
@@ -35,7 +35,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         </div>
       </nav>
 
-      <FilterBar defaultValues={hasFilters ? { days: days ? days.split(',').map(Number) : [], timeOfDay, type: type!, location } : undefined} />
+      <FilterBar defaultValues={hasFilters ? { days: days ? days.split(',').map(Number) : [], timeOfDay, type: type!, location, sort } : undefined} />
 
       <div className="px-6 py-6">
         {error && (
