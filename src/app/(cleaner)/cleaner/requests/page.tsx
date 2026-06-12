@@ -25,6 +25,15 @@ export default async function RequestsPage() {
     (b) => b.status !== "pending" || new Date(b.response_deadline) <= now
   );
 
+  if (!bookings || bookings.length === 0) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+        <div className="text-5xl mb-4">📬</div>
+        <p className="text-lg">No booking requests yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Requests</h1>
@@ -56,13 +65,6 @@ export default async function RequestsPage() {
             ))}
           </div>
         </section>
-      )}
-
-      {(!bookings || bookings.length === 0) && (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-4xl mb-3">📬</div>
-          <p className="text-base">No booking requests yet.</p>
-        </div>
       )}
     </div>
   );

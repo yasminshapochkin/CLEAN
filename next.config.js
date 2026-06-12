@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "tjhzujoojstvqkznuthc.supabase.co",
+      },
+    ],
+  },
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {

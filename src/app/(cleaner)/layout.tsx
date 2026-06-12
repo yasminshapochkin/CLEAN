@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/cleaner/requests", label: "Requests" },
   { href: "/cleaner/availability", label: "Availability" },
   { href: "/cleaner/profile", label: "Profile" },
+  { href: "/cleaner/preview", label: "Preview" },
 ];
 
 export default async function CleanerLayout({
@@ -87,7 +88,7 @@ export default async function CleanerLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+      <main className="relative flex-1 p-8 overflow-y-auto">{children}</main>
     </div>
   );
 }

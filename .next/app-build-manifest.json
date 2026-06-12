@@ -1,30 +1,15 @@
 {
   "pages": {
-    "/(cleaner)/cleaner/availability/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/cleaner/availability/page.js"
-    ],
-    "/(cleaner)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/layout.js"
+      "static/chunks/app/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
-    ],
-    "/(cleaner)/cleaner/requests/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/cleaner/requests/page.js"
-    ],
-    "/(cleaner)/cleaner/profile/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(cleaner)/cleaner/profile/page.js"
     ],
     "/(cleaner)/cleaner/dashboard/page": [
       "static/chunks/webpack.js",
@@ -36,10 +21,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(cleaner)/cleaner/dashboard/loading.js"
     ],
-    "/(auth)/login/page": [
+    "/(cleaner)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
+      "static/chunks/app/(cleaner)/layout.js"
+    ],
+    "/(cleaner)/cleaner/preview/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/preview/page.js"
+    ],
+    "/(cleaner)/cleaner/preview/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/preview/loading.js"
+    ],
+    "/(cleaner)/cleaner/profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/profile/page.js"
+    ],
+    "/(cleaner)/cleaner/profile/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(cleaner)/cleaner/profile/loading.js"
     ]
   }
 }
