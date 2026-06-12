@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { useTransition, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const navLinks = [
   { href: "/cleaner/dashboard", label: "Dashboard" },
@@ -13,16 +12,24 @@ const navLinks = [
 ];
 
 export default function NavLinks() {
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
-    setLoading(false);
-  }, [pathname]);
+    navLinks.forEach((link) => router.prefetch(link.href));
+  }, [router]);
+
+  function handleClick(href: string) {
+    if (href === pathname) return;
+    startTransition(() => {
+      router.push(href);
+    });
+  }
 
   return (
     <>
-      {loading && (
+      {isPending && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
           <svg
             className="animate-spin h-10 w-10 text-blue-600 mb-4"
@@ -38,14 +45,13 @@ export default function NavLinks() {
       )}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navLinks.map((link) => (
-          <Link
+          <button
             key={link.href}
-            href={link.href}
-            onClick={() => setLoading(true)}
-            className="flex items-center px-3 py-2 text-base text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            onClick={() => handleClick(link.href)}
+            className="w-full flex items-center px-3 py-2 text-base text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-left"
           >
             {link.label}
-          </Link>
+          </button>
         ))}
       </nav>
     </>
