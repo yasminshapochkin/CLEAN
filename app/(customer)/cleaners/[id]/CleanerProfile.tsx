@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { BookingRequestForm } from './BookingRequestForm'
 import type { CleanerResult } from '@/lib/types/cleaner'
 
 const SERVICE_BADGE: Record<string, string> = {
@@ -53,15 +54,7 @@ export function CleanerProfile({ cleaner }: { cleaner: CleanerResult }) {
           )}
         </div>
 
-        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-          <span className="text-lg font-bold text-gray-900">₪{cleaner.hourly_rate}/hr</span>
-          <button
-            type="button"
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            Request Booking
-          </button>
-        </div>
+        <BookingRequestForm cleaner={cleaner} />
       </div>
     </div>
   )
