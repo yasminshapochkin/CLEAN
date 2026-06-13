@@ -6,6 +6,7 @@ import AvailabilityModal from "./AvailabilityModal";
 import GalleryLightbox from "./GalleryLightbox";
 import AvatarLightbox from "./AvatarLightbox";
 import type { Profile, Cleaner, CleanerAvailability, CleanerWeeklyAvailability, CleanerGalleryPhoto } from "@/types/database";
+import { slotLabel } from "../availability/utils";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -138,10 +139,11 @@ export default async function PreviewPage() {
         const aboutBlock = (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             {(cleaner?.years_experience != null || cleaner?.service_radius_km || cleaner?.hourly_rate) && (
-              <div className="flex items-center gap-6 mb-4 pb-4 border-b border-gray-100">
-                <button className="shrink-0 bg-blue-600 text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors">
+              <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6 mb-4 pb-4 border-b border-gray-100">
+                <button className="w-full lg:w-auto shrink-0 bg-blue-600 text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors">
                   Request for cleaning
                 </button>
+                <div className="flex items-center gap-6">
                 {cleaner?.years_experience != null && (
                   <div>
                     <p className="text-sm text-gray-500">Experience</p>
@@ -162,6 +164,7 @@ export default async function PreviewPage() {
                     <p className="text-base font-semibold text-gray-900">₪{cleaner.hourly_rate}/hr</p>
                   </div>
                 )}
+                </div>
               </div>
             )}
             <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
@@ -200,14 +203,14 @@ export default async function PreviewPage() {
                             {recurring.map((slot) => (
                               <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
                                 <span className="text-sm font-medium text-blue-700">
-                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                                  {slotLabel(slot.start_time, slot.end_time)}
                                 </span>
                               </div>
                             ))}
                             {daySlots.map((slot) => (
                               <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
                                 <span className="text-sm font-medium text-blue-700">
-                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                                  {slotLabel(slot.start_time, slot.end_time)}
                                 </span>
                               </div>
                             ))}

@@ -5,6 +5,11 @@ import RequestCard from "../requests/RequestCard";
 import RealtimeBookings from "./RealtimeBookings";
 import type { BookingWithCustomer, Cleaner } from "@/types/database";
 
+function formatDate(d: string) {
+  const [y, m, day] = d.split("-");
+  return `${day}/${m}/${y}`;
+}
+
 export default async function CleanerDashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -121,21 +126,21 @@ export default async function CleanerDashboardPage() {
         </h2>
 
         {upcomingBookings && upcomingBookings.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {upcomingBookings.map((b) => (
               <div
                 key={b.id}
-                className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between"
+                className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center justify-between gap-4"
               >
                 <div>
-                  <div className="font-medium text-base text-gray-900">
+                  <div className="font-semibold text-xl text-gray-900">
                     {b.profiles?.full_name ?? "Customer"}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">{b.address}</div>
+                  <div className="text-base text-gray-500 mt-1">{b.address}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-base font-medium text-gray-900">{b.scheduled_date}</div>
-                  <div className="text-xs text-gray-500">
+                <div className="text-right shrink-0">
+                  <div className="text-xl font-semibold text-gray-900">{formatDate(b.scheduled_date)}</div>
+                  <div className="text-base text-gray-500 mt-1">
                     {b.scheduled_start?.slice(0, 5)} · {b.duration_hours}h
                   </div>
                 </div>

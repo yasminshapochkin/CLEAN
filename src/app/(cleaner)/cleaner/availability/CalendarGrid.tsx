@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { addAvailability, deleteAvailability } from "../../actions";
-import type { CleanerAvailability, CleanerWeeklyAvailability } from "@/types/database";
+import type { CleanerAvailability, CleanerWeeklyAvailability, Booking } from "@/types/database";
+import { TIME_SLOTS, SlotLabel, slotLabel } from "./utils";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = [
@@ -55,6 +56,7 @@ function formatFullDate(dateStr: string): string {
 interface Props {
   slots: CleanerAvailability[];
   weeklySlots: CleanerWeeklyAvailability[];
+  bookings: Booking[];
 }
 
 interface DayPanel {
@@ -63,16 +65,13 @@ interface DayPanel {
   past: boolean;
 }
 
-export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props) {
+export default function CalendarGrid({ slots: initialSlots, weeklySlots, bookings }: Props) {
   const [slots, setSlots] = useState(initialSlots);
   const [columns, setColumns] = useState(7);
   const [panel, setPanel] = useState<DayPanel>({ open: false, dateStr: "", past: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [startHour, setStartHour] = useState("08");
-  const [startMin, setStartMin] = useState("00");
-  const [endHour, setEndHour] = useState("17");
-  const [endMin, setEndMin] = useState("00");
+  const [selected, setSelected] = useState<Set<SlotLabel>>(new Set());
 
   const days = get4Weeks();
   const rows: Date[][] = [];
@@ -86,13 +85,24 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
     return acc;
   }, {});
 
+  const bookingsByDate = bookings.reduce<Record<string, Booking[]>>((acc, b) => {
+    if (!acc[b.scheduled_date]) acc[b.scheduled_date] = [];
+    acc[b.scheduled_date].push(b);
+    return acc;
+  }, {});
+
   function openPanel(day: Date) {
     setError(null);
-    setStartHour("08");
-    setStartMin("00");
-    setEndHour("17");
-    setEndMin("00");
+    setSelected(new Set());
     setPanel({ open: true, dateStr: toLocalDateStr(day), past: isPast(day) });
+  }
+
+  function toggleSlot(label: SlotLabel) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
   }
 
   function closePanel() {
@@ -102,18 +112,19 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (selected.size === 0) return;
     setLoading(true);
     setError(null);
-    const formData = new FormData();
-    formData.set("date", panel.dateStr);
-    formData.set("start_time", `${startHour}:${startMin}`);
-    formData.set("end_time", `${endHour}:${endMin}`);
-    const result = await addAvailability(formData);
-    if (result?.error) {
-      setError(result.error);
-    } else {
-      window.location.reload();
+    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l))) {
+      const ts = TIME_SLOTS.find((t) => t.label === label)!;
+      const formData = new FormData();
+      formData.set("date", panel.dateStr);
+      formData.set("start_time", ts.start);
+      formData.set("end_time", ts.end);
+      const result = await addAvailability(formData);
+      if (result?.error) { setError(result.error); setLoading(false); return; }
     }
+    window.location.reload();
     setLoading(false);
   }
 
@@ -127,6 +138,7 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
   }
 
   const panelSlots = slotsByDate[panel.dateStr] ?? [];
+  const panelBookings = bookingsByDate[panel.dateStr] ?? [];
   const panelRecurring = panel.dateStr
     ? weeklySlots.filter((s) => {
         const d = new Date(panel.dateStr + "T12:00:00");
@@ -182,15 +194,16 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
               const dateStr = toLocalDateStr(day);
               const daySlots = slotsByDate[dateStr] ?? [];
               const recurring = weeklySlots.filter((s) => s.day_of_week === day.getDay());
+              const dayBookings = bookingsByDate[dateStr] ?? [];
               const past = isPast(day);
               const today = isToday(day);
-              const hasAny = daySlots.length > 0 || recurring.length > 0;
+              const hasAny = daySlots.length > 0 || recurring.length > 0 || dayBookings.length > 0;
 
               return (
                 <button
                   key={dateStr}
                   onClick={() => openPanel(day)}
-                  className={`flex flex-col p-2 min-h-[100px] text-left transition-colors ${
+                  className={`flex flex-col p-2 min-h-[130px] text-left transition-colors ${
                     past
                       ? "opacity-40 bg-gray-50 hover:bg-gray-100"
                       : hasAny
@@ -217,22 +230,29 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
 
                   {/* Slots preview */}
                   <div className="flex-1 space-y-1">
-                    {recurring.slice(0, 2).map((slot) => (
+                    {recurring.map((slot) => (
                       <div key={slot.id} className="bg-indigo-100 rounded px-1 py-0.5">
                         <span className="text-xs font-medium text-indigo-600 leading-tight block">
-                          ↻ {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                          ↻ {slotLabel(slot.start_time, slot.end_time)}
                         </span>
                       </div>
                     ))}
-                    {daySlots.slice(0, 2).map((slot) => (
+                    {daySlots.map((slot) => (
                       <div key={slot.id} className="bg-blue-100 rounded px-1 py-0.5">
                         <span className="text-xs font-medium text-blue-700 leading-tight block">
-                          {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                          {slotLabel(slot.start_time, slot.end_time)}
                         </span>
                       </div>
                     ))}
-                    {(recurring.length + daySlots.length) > 4 && (
-                      <span className="text-xs text-blue-400">+{recurring.length + daySlots.length - 4} more</span>
+                    {dayBookings.slice(0, 2).map((b) => (
+                      <div key={b.id} className="bg-orange-100 rounded px-1 py-0.5">
+                        <span className="text-xs font-medium text-orange-700 leading-tight block">
+                          ✓ {b.scheduled_start.slice(0, 5)} · {b.duration_hours}h
+                        </span>
+                      </div>
+                    ))}
+                    {dayBookings.length > 2 && (
+                      <span className="text-xs text-blue-400">+{dayBookings.length - 2} more</span>
                     )}
                   </div>
 
@@ -277,12 +297,24 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
 
             {/* Slots list */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              {panelRecurring.length === 0 && panelSlots.length === 0 ? (
+              {panelRecurring.length === 0 && panelSlots.length === 0 && panelBookings.length === 0 ? (
                 <p className="text-base text-gray-400 text-center py-4">
                   {panel.past ? "No hours were set for this day." : "No hours set yet. Add some below."}
                 </p>
               ) : (
                 <>
+                  {panelBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3"
+                    >
+                      <p className="text-xs font-medium text-orange-500 mb-0.5">✓ Booked</p>
+                      <p className="text-lg font-semibold text-orange-800">
+                        {b.scheduled_start.slice(0, 5)} · {b.duration_hours}h
+                      </p>
+                      <p className="text-sm text-orange-700 mt-0.5">{b.address}</p>
+                    </div>
+                  ))}
                   {panelRecurring.map((slot) => (
                     <div
                       key={slot.id}
@@ -291,7 +323,7 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
                       <div>
                         <p className="text-xs font-medium text-indigo-400 mb-0.5">↻ Weekly recurring</p>
                         <p className="text-lg font-semibold text-indigo-700">
-                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                          {slotLabel(slot.start_time, slot.end_time)}
                         </p>
                       </div>
                     </div>
@@ -303,7 +335,7 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
                     >
                       <div>
                         <p className="text-lg font-semibold text-blue-800">
-                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                          {slotLabel(slot.start_time, slot.end_time)}
                         </p>
                       </div>
                       {!panel.past && (
@@ -321,62 +353,35 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props
               )}
             </div>
 
-            {/* Add hours form — only for non-past days */}
+            {/* Add slot — only for non-past days */}
             {!panel.past && (
               <div className="border-t border-gray-100 px-6 py-5">
-                <p className="text-base font-semibold text-gray-700 mb-3">Add hours</p>
-                <form onSubmit={handleAdd} className="space-y-3">
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm text-gray-500 mb-1">Start</label>
-                      <div className="flex gap-1">
-                        <select
-                          value={startHour}
-                          onChange={(e) => setStartHour(e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={startMin}
-                          onChange={(e) => setStartMin(e.target.value)}
-                          className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-sm text-gray-500 mb-1">End</label>
-                      <div className="flex gap-1">
-                        <select
-                          value={endHour}
-                          onChange={(e) => setEndHour(e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={endMin}
-                          onChange={(e) => setEndMin(e.target.value)}
-                          className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {["00", "15", "30", "45"].map((m) => <option key={m} value={m}>:{m}</option>)}
-                        </select>
-                      </div>
-                    </div>
+                <p className="text-base font-semibold text-gray-700 mb-3">Add availability</p>
+                <form onSubmit={handleAdd} className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {TIME_SLOTS.map((ts) => (
+                      <button
+                        key={ts.label}
+                        type="button"
+                        onClick={() => toggleSlot(ts.label)}
+                        className={`rounded-xl border-2 py-3 text-center transition-colors ${
+                          selected.has(ts.label)
+                            ? "border-blue-600 bg-blue-600 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold">{ts.label}</p>
+                        <p className="text-xs mt-0.5 opacity-70">{ts.start}–{ts.end}</p>
+                      </button>
+                    ))}
                   </div>
                   {error && <p className="text-base text-red-600">{error}</p>}
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || selected.size === 0}
                     className="w-full bg-blue-600 text-white rounded-xl py-3 text-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
                   >
-                    {loading ? "Adding…" : "Add hours"}
+                    {loading ? "Adding…" : "Add"}
                   </button>
                 </form>
               </div>

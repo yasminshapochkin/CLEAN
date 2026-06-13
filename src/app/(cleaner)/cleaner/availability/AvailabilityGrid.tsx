@@ -4,19 +4,18 @@ import { useState } from "react";
 import { addWeeklyAvailability, deleteWeeklyAvailability } from "../../actions";
 import type { CleanerWeeklyAvailability } from "@/types/database";
 
-// Mon-first display order; value = day_of_week stored in DB (0=Sun, 1=Mon … 6=Sat)
 const DAYS = [
-  { label: "Monday",    short: "Mon", value: 1 },
-  { label: "Tuesday",   short: "Tue", value: 2 },
-  { label: "Wednesday", short: "Wed", value: 3 },
-  { label: "Thursday",  short: "Thu", value: 4 },
-  { label: "Friday",    short: "Fri", value: 5 },
-  { label: "Saturday",  short: "Sat", value: 6 },
-  { label: "Sunday",    short: "Sun", value: 0 },
+  { label: "Monday",    value: 1 },
+  { label: "Tuesday",   value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday",  value: 4 },
+  { label: "Friday",    value: 5 },
+  { label: "Saturday",  value: 6 },
+  { label: "Sunday",    value: 0 },
 ];
 
-const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
-const MINS = ["00", "15", "30", "45"];
+import { TIME_SLOTS, SlotLabel, slotLabel } from "./utils";
+export { slotLabel };
 
 interface Props {
   slots: CleanerWeeklyAvailability[];
@@ -27,10 +26,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
   const [modal, setModal] = useState<{ open: boolean; day: number }>({ open: false, day: 1 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [startHour, setStartHour] = useState("08");
-  const [startMin, setStartMin] = useState("00");
-  const [endHour, setEndHour] = useState("17");
-  const [endMin, setEndMin] = useState("00");
+  const [selected, setSelected] = useState<Set<SlotLabel>>(new Set());
 
   const slotsByDay = DAYS.reduce<Record<number, CleanerWeeklyAvailability[]>>((acc, { value }) => {
     acc[value] = slots.filter((s) => s.day_of_week === value);
@@ -39,26 +35,34 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
 
   function openModal(day: number) {
     setError(null);
-    setStartHour("08"); setStartMin("00");
-    setEndHour("17"); setEndMin("00");
+    setSelected(new Set());
     setModal({ open: true, day });
+  }
+
+  function toggleSlot(label: SlotLabel) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
   }
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (selected.size === 0) return;
     setLoading(true);
     setError(null);
-    const formData = new FormData();
-    formData.set("day_of_week", String(modal.day));
-    formData.set("start_time", `${startHour}:${startMin}`);
-    formData.set("end_time", `${endHour}:${endMin}`);
-    const result = await addWeeklyAvailability(formData);
-    if (result?.error) {
-      setError(result.error);
-    } else {
-      setModal({ open: false, day: 1 });
-      window.location.reload();
+    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l))) {
+      const ts = TIME_SLOTS.find((t) => t.label === label)!;
+      const formData = new FormData();
+      formData.set("day_of_week", String(modal.day));
+      formData.set("start_time", ts.start);
+      formData.set("end_time", ts.end);
+      const result = await addWeeklyAvailability(formData);
+      if (result?.error) { setError(result.error); setLoading(false); return; }
     }
+    setModal({ open: false, day: 1 });
+    window.location.reload();
     setLoading(false);
   }
 
@@ -83,7 +87,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
               {slotsByDay[value].map((slot) => (
                 <div key={slot.id} className="flex items-center justify-between bg-blue-50 rounded-lg px-2 py-1.5">
                   <span className="text-xs font-medium text-blue-700">
-                    {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                    {slotLabel(slot.start_time, slot.end_time)}
                   </span>
                   <button
                     onClick={() => handleDelete(slot.id)}
@@ -114,30 +118,23 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-1">Add recurring hours</h2>
             <p className="text-sm text-gray-500 mb-6">Every {modalDayLabel}</p>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-500 mb-1">Start</label>
-                  <div className="flex gap-1">
-                    <select value={startHour} onChange={(e) => setStartHour(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <select value={startMin} onChange={(e) => setStartMin(e.target.value)} className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      {MINS.map((m) => <option key={m} value={m}>:{m}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-500 mb-1">End</label>
-                  <div className="flex gap-1">
-                    <select value={endHour} onChange={(e) => setEndHour(e.target.value)} className="flex-1 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <select value={endMin} onChange={(e) => setEndMin(e.target.value)} className="w-20 border border-gray-300 rounded-lg px-2 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      {MINS.map((m) => <option key={m} value={m}>:{m}</option>)}
-                    </select>
-                  </div>
-                </div>
+            <form onSubmit={handleAdd} className="space-y-5">
+              <div className="grid grid-cols-3 gap-3">
+                {TIME_SLOTS.map((ts) => (
+                  <button
+                    key={ts.label}
+                    type="button"
+                    onClick={() => toggleSlot(ts.label)}
+                    className={`rounded-xl border-2 py-4 text-center transition-colors ${
+                      selected.has(ts.label)
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
+                    }`}
+                  >
+                    <p className="text-base font-semibold">{ts.label}</p>
+                    <p className="text-xs mt-1 opacity-70">{ts.start}–{ts.end}</p>
+                  </button>
+                ))}
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-3">
@@ -150,7 +147,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || selected.size === 0}
                   className="flex-1 bg-blue-600 text-white rounded-lg py-3 font-semibold hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? "Adding…" : "Add"}

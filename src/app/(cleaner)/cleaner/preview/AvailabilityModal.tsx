@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CleanerAvailability, CleanerWeeklyAvailability } from "@/types/database";
+import { slotLabel } from "../availability/utils";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -83,14 +84,14 @@ export default function AvailabilityModal({ weeks, slots, weeklySlots }: Props) 
                           {recurring.map((slot) => (
                             <div key={slot.id} className="bg-blue-500 rounded px-0.5 py-0.5">
                               <span className="text-[10px] font-medium text-white leading-none">
-                                {slot.start_time.slice(0, 5)}
+                                {slotLabel(slot.start_time, slot.end_time)[0]}
                               </span>
                             </div>
                           ))}
                           {daySlots.map((slot) => (
                             <div key={slot.id} className="bg-blue-500 rounded px-0.5 py-0.5">
                               <span className="text-[10px] font-medium text-white leading-none">
-                                {slot.start_time.slice(0, 5)}
+                                {slotLabel(slot.start_time, slot.end_time)[0]}
                               </span>
                             </div>
                           ))}

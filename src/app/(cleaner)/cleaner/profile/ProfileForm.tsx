@@ -138,10 +138,9 @@ export default function ProfileForm({ profile, cleaner }: Props) {
         <input
           type="text"
           name="address"
-          placeholder="e.g. Shoreditch, London"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-sm text-gray-400 mt-1">
           Used to calculate your service coverage area.
         </p>
       </div>
@@ -162,7 +161,7 @@ export default function ProfileForm({ profile, cleaner }: Props) {
         </div>
         <div>
           <label className="block text-base font-medium text-gray-700 mb-1">
-            Languages (comma-separated)
+            Languages (separated by ",")
           </label>
           <input
             type="text"

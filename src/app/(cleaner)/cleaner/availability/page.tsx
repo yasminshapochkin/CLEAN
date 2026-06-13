@@ -2,7 +2,7 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AvailabilityGrid from "./AvailabilityGrid";
 import CalendarGrid from "./CalendarGrid";
-import type { CleanerAvailability, CleanerWeeklyAvailability } from "@/types/database";
+import type { CleanerAvailability, CleanerWeeklyAvailability, Booking } from "@/types/database";
 
 export default async function AvailabilityPage() {
   const user = await getCurrentUser();
@@ -14,7 +14,7 @@ export default async function AvailabilityPage() {
   const from = today.toISOString().split("T")[0];
   const to = new Date(today.getTime() + 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  const [{ data: weeklySlots }, { data: specificSlots }] = await Promise.all([
+  const [{ data: weeklySlots }, { data: specificSlots }, { data: bookings }] = await Promise.all([
     supabase
       .from("cleaner_weekly_availability")
       .select("*")
@@ -31,6 +31,16 @@ export default async function AvailabilityPage() {
       .order("date")
       .order("start_time")
       .returns<CleanerAvailability[]>(),
+    supabase
+      .from("bookings")
+      .select("*")
+      .eq("cleaner_id", user.id)
+      .eq("status", "accepted")
+      .gte("scheduled_date", from)
+      .lte("scheduled_date", to)
+      .order("scheduled_date")
+      .order("scheduled_start")
+      .returns<Booking[]>(),
   ]);
 
   return (
@@ -60,7 +70,7 @@ export default async function AvailabilityPage() {
             Add availability for a particular date — useful for one-off days or exceptions.
           </p>
         </div>
-        <CalendarGrid slots={specificSlots ?? []} weeklySlots={weeklySlots ?? []} />
+        <CalendarGrid slots={specificSlots ?? []} weeklySlots={weeklySlots ?? []} bookings={bookings ?? []} />
       </div>
     </div>
   );
