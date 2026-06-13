@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import RequestCard from "../requests/RequestCard";
@@ -6,17 +6,38 @@ import RealtimeBookings from "./RealtimeBookings";
 import type { BookingWithCustomer, Cleaner } from "@/types/database";
 
 export default async function CleanerDashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: cleaner } = await supabase
-    .from("cleaners")
-    .select("status")
-    .eq("id", user.id)
-    .single<Pick<Cleaner, "id" | "status">>();
+  const supabase = await createClient();
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+
+  const [{ data: cleaner }, { data: pendingBookings }, { data: upcomingBookings }] =
+    await Promise.all([
+      supabase
+        .from("cleaners")
+        .select("status")
+        .eq("id", user.id)
+        .single<Pick<Cleaner, "id" | "status">>(),
+      supabase
+        .from("bookings")
+        .select("*, profiles!customer_id(full_name, phone, avatar_url)")
+        .eq("cleaner_id", user.id)
+        .eq("status", "pending")
+        .gt("response_deadline", now.toISOString())
+        .order("created_at", { ascending: true })
+        .returns<BookingWithCustomer[]>(),
+      supabase
+        .from("bookings")
+        .select("*, profiles!customer_id(full_name, phone, avatar_url)")
+        .eq("cleaner_id", user.id)
+        .eq("status", "accepted")
+        .gte("scheduled_date", todayStr)
+        .order("scheduled_date", { ascending: true })
+        .limit(5)
+        .returns<BookingWithCustomer[]>(),
+    ]);
 
   if (!cleaner || cleaner.status === "pending") {
     return (
@@ -58,29 +79,6 @@ export default async function CleanerDashboardPage() {
     );
   }
 
-  const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
-
-  const [{ data: pendingBookings }, { data: upcomingBookings }] =
-    await Promise.all([
-      supabase
-        .from("bookings")
-        .select("*, profiles!customer_id(full_name, phone, avatar_url)")
-        .eq("cleaner_id", user.id)
-        .eq("status", "pending")
-        .gt("response_deadline", now.toISOString())
-        .order("created_at", { ascending: true })
-        .returns<BookingWithCustomer[]>(),
-      supabase
-        .from("bookings")
-        .select("*, profiles!customer_id(full_name, phone, avatar_url)")
-        .eq("cleaner_id", user.id)
-        .eq("status", "accepted")
-        .gte("scheduled_date", todayStr)
-        .order("scheduled_date", { ascending: true })
-        .limit(5)
-        .returns<BookingWithCustomer[]>(),
-    ]);
 
   return (
     <div className="max-w-3xl">

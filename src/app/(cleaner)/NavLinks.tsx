@@ -95,6 +95,19 @@ export default function NavLinks({ signOut, userName, status, statusColor }: Pro
         <div className="px-5 py-5 border-b border-gray-100">
           <span className="text-lg font-bold text-blue-600">Clean</span>
         </div>
+        <div className="px-4 py-4 border-b border-gray-100 space-y-2">
+          <div className="text-base font-medium text-gray-900 truncate">{userName}</div>
+          {status && (
+            <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
+              {status}
+            </span>
+          )}
+          <form action={signOut}>
+            <button type="submit" className="w-full text-left text-base text-white bg-[#dc2626] hover:bg-red-700 transition-colors rounded-lg px-3 py-2 font-medium">
+              Sign out
+            </button>
+          </form>
+        </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => (
             <button
@@ -111,19 +124,6 @@ export default function NavLinks({ signOut, userName, status, statusColor }: Pro
             </button>
           ))}
         </nav>
-        <div className="px-4 py-4 border-t border-gray-100 space-y-2">
-          <div className="text-base font-medium text-gray-900 truncate">{userName}</div>
-          {status && (
-            <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
-              {status}
-            </span>
-          )}
-          <form action={signOut}>
-            <button type="submit" className="w-full text-left text-base text-white bg-[#dc2626] hover:bg-red-700 transition-colors rounded-lg px-3 py-2 font-medium">
-              Sign out
-            </button>
-          </form>
-        </div>
       </aside>
 
       {/* ── Mobile top bar ── */}
@@ -156,6 +156,19 @@ export default function NavLinks({ signOut, userName, status, statusColor }: Pro
             className="bg-white w-full mt-14 shadow-xl pb-4"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="border-b border-gray-100 px-6 py-4">
+              <div className="text-base text-gray-500 mb-1">{userName}</div>
+              {status && (
+                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 ${statusColor}`}>
+                  {status}
+                </span>
+              )}
+              <form action={signOut}>
+                <button type="submit" className="w-full text-center text-base text-white bg-[#dc2626] hover:bg-red-700 transition-colors rounded-xl px-4 py-3 font-semibold">
+                  Sign out
+                </button>
+              </form>
+            </div>
             {navItems.map((item) => (
               <button
                 key={item.href}
@@ -170,19 +183,6 @@ export default function NavLinks({ signOut, userName, status, statusColor }: Pro
                 {item.label}
               </button>
             ))}
-            <div className="border-t border-gray-100 mt-2 pt-3 px-6">
-              <div className="text-base text-gray-500 mb-1">{userName}</div>
-              {status && (
-                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 ${statusColor}`}>
-                  {status}
-                </span>
-              )}
-              <form action={signOut}>
-                <button type="submit" className="w-full text-center text-base text-white bg-[#dc2626] hover:bg-red-700 transition-colors rounded-xl px-4 py-3 font-semibold">
-                  Sign out
-                </button>
-              </form>
-            </div>
           </div>
         </div>
       )}

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import AvailabilityModal from "./AvailabilityModal";
-import type { Profile, Cleaner, CleanerAvailability } from "@/types/database";
+import GalleryLightbox from "./GalleryLightbox";
+import AvatarLightbox from "./AvatarLightbox";
+import type { Profile, Cleaner, CleanerAvailability, CleanerWeeklyAvailability, CleanerGalleryPhoto } from "@/types/database";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -32,7 +34,7 @@ export default async function PreviewPage() {
   const from = toLocalDateStr(today);
   const to = toLocalDateStr(new Date(today.getTime() + 28 * 24 * 60 * 60 * 1000));
 
-  const [{ data: profile }, { data: cleaner }, { data: slots }] = await Promise.all([
+  const [{ data: profile }, { data: cleaner }, { data: slots }, { data: weeklySlots }, { data: galleryPhotos }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
     supabase.from("cleaners").select("*").eq("id", user.id).single<Cleaner>(),
     supabase
@@ -44,6 +46,19 @@ export default async function PreviewPage() {
       .order("date")
       .order("start_time")
       .returns<CleanerAvailability[]>(),
+    supabase
+      .from("cleaner_weekly_availability")
+      .select("*")
+      .eq("cleaner_id", user.id)
+      .order("day_of_week")
+      .order("start_time")
+      .returns<CleanerWeeklyAvailability[]>(),
+    supabase
+      .from("cleaner_gallery")
+      .select("*")
+      .eq("cleaner_id", user.id)
+      .order("created_at", { ascending: false })
+      .returns<CleanerGalleryPhoto[]>(),
   ]);
 
   const monday = getMonday(today);
@@ -79,21 +94,13 @@ export default async function PreviewPage() {
       {/* Avatar + name row */}
       <div className="bg-white border-b border-gray-200 px-10 py-6">
         <div className="flex items-center gap-6">
-          <div className="w-48 h-48 rounded-full bg-gray-200 border-4 border-white overflow-hidden shrink-0 shadow">
-            {profile?.avatar_url ? (
-              <Image
-                src={profile.avatar_url}
-                alt="Profile photo"
-                width={192}
-                height={192}
-                className="object-cover w-full h-full"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl bg-gray-100">
-                👤
-              </div>
-            )}
-          </div>
+          {profile?.avatar_url ? (
+            <AvatarLightbox src={profile.avatar_url} name={profile.full_name ?? "Profile photo"} />
+          ) : (
+            <div className="w-48 h-48 rounded-full bg-gray-100 border-4 border-white overflow-hidden shrink-0 shadow flex items-center justify-center text-gray-400 text-5xl">
+              👤
+            </div>
+          )}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {profile?.full_name ?? "No name set"}
@@ -126,33 +133,37 @@ export default async function PreviewPage() {
 
       {/* Stats block — reused in both layouts */}
       {(() => {
-        const statsBlock = (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            {cleaner?.hourly_rate && (
-              <div>
-                <p className="text-base text-gray-500">Hourly rate</p>
-                <p className="text-2xl font-bold text-gray-900">₪{cleaner.hourly_rate}/hr</p>
-              </div>
-            )}
-            {cleaner?.years_experience != null && (
-              <div>
-                <p className="text-base text-gray-500">Experience</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {cleaner.years_experience} year{cleaner.years_experience !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )}
-            {cleaner?.service_radius_km && (
-              <div>
-                <p className="text-base text-gray-500">Service radius</p>
-                <p className="text-lg font-semibold text-gray-900">{cleaner.service_radius_km} km</p>
-              </div>
-            )}
-          </div>
-        );
+        const galleryBlock = <GalleryLightbox photos={galleryPhotos ?? []} />;
 
         const aboutBlock = (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            {(cleaner?.years_experience != null || cleaner?.service_radius_km || cleaner?.hourly_rate) && (
+              <div className="flex items-center gap-6 mb-4 pb-4 border-b border-gray-100">
+                <button className="shrink-0 bg-blue-600 text-white text-sm font-semibold rounded-xl px-4 py-2.5 hover:bg-blue-700 transition-colors">
+                  Request for cleaning
+                </button>
+                {cleaner?.years_experience != null && (
+                  <div>
+                    <p className="text-sm text-gray-500">Experience</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {cleaner.years_experience} year{cleaner.years_experience !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                )}
+                {cleaner?.service_radius_km && (
+                  <div>
+                    <p className="text-sm text-gray-500">Service radius</p>
+                    <p className="text-base font-semibold text-gray-900">{cleaner.service_radius_km} km</p>
+                  </div>
+                )}
+                {cleaner?.hourly_rate && (
+                  <div>
+                    <p className="text-sm text-gray-500">Hourly rate</p>
+                    <p className="text-base font-semibold text-gray-900">₪{cleaner.hourly_rate}/hr</p>
+                  </div>
+                )}
+              </div>
+            )}
             <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
             <p className="text-base text-gray-700 leading-relaxed">
               {cleaner?.bio ?? <span className="text-gray-400">No bio written yet.</span>}
@@ -163,7 +174,7 @@ export default async function PreviewPage() {
         const desktopAvailability = (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Availability</h2>
-            {(slots ?? []).length === 0 ? (
+            {(slots ?? []).length === 0 && (weeklySlots ?? []).length === 0 ? (
               <p className="text-base text-gray-400">No availability set for the next 4 weeks.</p>
             ) : (
               <div className="space-y-2">
@@ -176,13 +187,23 @@ export default async function PreviewPage() {
                   <div key={wi} className="grid grid-cols-7 gap-2">
                     {week.map((day) => {
                       const daySlots = slotsByDate[day.dateStr] ?? [];
+                      const dow = new Date(day.dateStr + "T12:00:00").getDay();
+                      const recurring = (weeklySlots ?? []).filter((s) => s.day_of_week === dow);
+                      const hasAny = daySlots.length > 0 || recurring.length > 0;
                       return (
-                        <div key={day.dateStr} className={`rounded-xl border p-3 min-h-[90px] flex flex-col ${daySlots.length > 0 ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
+                        <div key={day.dateStr} className={`rounded-xl border p-3 min-h-[90px] flex flex-col ${hasAny ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"}`}>
                           <div className="flex items-center gap-1 mb-1">
                             <span className="text-base font-bold text-gray-700">{day.dayNum}</span>
                             {day.monthName && <span className="text-xs text-gray-400">{day.monthName}</span>}
                           </div>
                           <div className="space-y-1">
+                            {recurring.map((slot) => (
+                              <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
+                                <span className="text-sm font-medium text-blue-700">
+                                  {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                                </span>
+                              </div>
+                            ))}
                             {daySlots.map((slot) => (
                               <div key={slot.id} className="bg-blue-100 rounded px-2 py-0.5">
                                 <span className="text-sm font-medium text-blue-700">
@@ -206,8 +227,8 @@ export default async function PreviewPage() {
             {/* ── Mobile layout ── */}
             <div className="lg:hidden px-4 py-6 space-y-4">
               {aboutBlock}
-              {statsBlock}
-              <AvailabilityModal weeks={weeks} slots={slots ?? []} />
+              {galleryBlock}
+              <AvailabilityModal weeks={weeks} slots={slots ?? []} weeklySlots={weeklySlots ?? []} />
             </div>
 
             {/* ── Desktop layout ── */}
@@ -216,7 +237,9 @@ export default async function PreviewPage() {
                 {aboutBlock}
                 {desktopAvailability}
               </div>
-              <div>{statsBlock}</div>
+              <div className="space-y-5">
+                {galleryBlock}
+              </div>
             </div>
           </>
         );

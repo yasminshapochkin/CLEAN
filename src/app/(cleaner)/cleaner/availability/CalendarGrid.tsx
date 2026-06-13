@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { addAvailability, deleteAvailability } from "../../actions";
-import type { CleanerAvailability } from "@/types/database";
+import type { CleanerAvailability, CleanerWeeklyAvailability } from "@/types/database";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = [
@@ -54,6 +54,7 @@ function formatFullDate(dateStr: string): string {
 
 interface Props {
   slots: CleanerAvailability[];
+  weeklySlots: CleanerWeeklyAvailability[];
 }
 
 interface DayPanel {
@@ -62,7 +63,7 @@ interface DayPanel {
   past: boolean;
 }
 
-export default function CalendarGrid({ slots: initialSlots }: Props) {
+export default function CalendarGrid({ slots: initialSlots, weeklySlots }: Props) {
   const [slots, setSlots] = useState(initialSlots);
   const [columns, setColumns] = useState(7);
   const [panel, setPanel] = useState<DayPanel>({ open: false, dateStr: "", past: false });
@@ -126,28 +127,31 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
   }
 
   const panelSlots = slotsByDate[panel.dateStr] ?? [];
+  const panelRecurring = panel.dateStr
+    ? weeklySlots.filter((s) => {
+        const d = new Date(panel.dateStr + "T12:00:00");
+        return s.day_of_week === d.getDay();
+      })
+    : [];
 
   return (
     <>
       {/* Column control */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
-        <span className="text-base font-semibold text-gray-700">
-          {columns} day{columns > 1 ? "s" : ""} per row
-        </span>
+      <div className="flex items-center justify-end px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setColumns((c) => Math.max(1, c - 1))}
             disabled={columns === 1}
             className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30 text-xl font-bold flex items-center justify-center"
           >
-            −
+            +
           </button>
           <button
             onClick={() => setColumns((c) => Math.min(7, c + 1))}
             disabled={columns === 7}
             className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-30 text-xl font-bold flex items-center justify-center"
           >
-            +
+            −
           </button>
         </div>
       </div>
@@ -177,8 +181,10 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
             {row.map((day) => {
               const dateStr = toLocalDateStr(day);
               const daySlots = slotsByDate[dateStr] ?? [];
+              const recurring = weeklySlots.filter((s) => s.day_of_week === day.getDay());
               const past = isPast(day);
               const today = isToday(day);
+              const hasAny = daySlots.length > 0 || recurring.length > 0;
 
               return (
                 <button
@@ -187,7 +193,7 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
                   className={`flex flex-col p-2 min-h-[100px] text-left transition-colors ${
                     past
                       ? "opacity-40 bg-gray-50 hover:bg-gray-100"
-                      : daySlots.length > 0
+                      : hasAny
                       ? "bg-blue-50 hover:bg-blue-100"
                       : "bg-white hover:bg-gray-50"
                   }`}
@@ -211,21 +217,28 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
 
                   {/* Slots preview */}
                   <div className="flex-1 space-y-1">
-                    {daySlots.slice(0, 3).map((slot) => (
+                    {recurring.slice(0, 2).map((slot) => (
+                      <div key={slot.id} className="bg-indigo-100 rounded px-1 py-0.5">
+                        <span className="text-xs font-medium text-indigo-600 leading-tight block">
+                          ↻ {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                    ))}
+                    {daySlots.slice(0, 2).map((slot) => (
                       <div key={slot.id} className="bg-blue-100 rounded px-1 py-0.5">
                         <span className="text-xs font-medium text-blue-700 leading-tight block">
                           {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
                         </span>
                       </div>
                     ))}
-                    {daySlots.length > 3 && (
-                      <span className="text-xs text-blue-400">+{daySlots.length - 3} more</span>
+                    {(recurring.length + daySlots.length) > 4 && (
+                      <span className="text-xs text-blue-400">+{recurring.length + daySlots.length - 4} more</span>
                     )}
                   </div>
 
-                  {/* Plus hint when empty and not past */}
-                  {!past && daySlots.length === 0 && (
-                    <span className="mt-1 text-gray-300 text-2xl font-bold leading-none self-center">+</span>
+                  {/* Plus hint — always visible on non-past days */}
+                  {!past && (
+                    <span className="mt-1 text-blue-300 text-3xl font-bold leading-none self-center">+</span>
                   )}
                 </button>
               );
@@ -264,32 +277,47 @@ export default function CalendarGrid({ slots: initialSlots }: Props) {
 
             {/* Slots list */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              {panelSlots.length === 0 ? (
+              {panelRecurring.length === 0 && panelSlots.length === 0 ? (
                 <p className="text-base text-gray-400 text-center py-4">
                   {panel.past ? "No hours were set for this day." : "No hours set yet. Add some below."}
                 </p>
               ) : (
-                panelSlots.map((slot) => (
-                  <div
-                    key={slot.id}
-                    className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-lg font-semibold text-blue-800">
-                        {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
-                      </p>
+                <>
+                  {panelRecurring.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-xs font-medium text-indigo-400 mb-0.5">↻ Weekly recurring</p>
+                        <p className="text-lg font-semibold text-indigo-700">
+                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                        </p>
+                      </div>
                     </div>
-                    {!panel.past && (
-                      <button
-                        onClick={() => handleDelete(slot.id)}
-                        className="text-red-400 hover:text-red-600 text-2xl font-bold leading-none ml-4"
-                        title="Remove"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))
+                  ))}
+                  {panelSlots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-lg font-semibold text-blue-800">
+                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                        </p>
+                      </div>
+                      {!panel.past && (
+                        <button
+                          onClick={() => handleDelete(slot.id)}
+                          className="text-red-400 hover:text-red-600 text-2xl font-bold leading-none ml-4"
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </>
               )}
             </div>
 

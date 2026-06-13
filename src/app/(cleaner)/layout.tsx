@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/(auth)/actions";
 import NavLinks from "./NavLinks";
@@ -9,26 +9,16 @@ export default async function CleanerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single<Profile>();
+  const supabase = await createClient();
+  const [{ data: profile }, { data: cleaner }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
+    supabase.from("cleaners").select("status").eq("id", user.id).single<Pick<Cleaner, "id" | "status">>(),
+  ]);
 
   if (!profile || profile.role !== "cleaner") redirect("/login");
-
-  const { data: cleaner } = await supabase
-    .from("cleaners")
-    .select("status")
-    .eq("id", user.id)
-    .single<Pick<Cleaner, "id" | "status">>();
 
   const statusColor: Record<string, string> = {
     approved: "bg-green-100 text-green-700",

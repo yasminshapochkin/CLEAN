@@ -117,6 +117,111 @@ export async function addAvailability(formData: FormData) {
   return { success: true };
 }
 
+export async function uploadGalleryPhoto(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const file = formData.get("photo") as File;
+  if (!file || file.size === 0) return { error: "No file selected." };
+  if (!file.type.startsWith("image/")) return { error: "File must be an image." };
+  if (file.size > 5 * 1024 * 1024) return { error: "Image must be under 5 MB." };
+
+  const ext = file.name.split(".").pop();
+  const path = `${user.id}/${Date.now()}.${ext}`;
+
+  const { error: uploadErr } = await supabase.storage
+    .from("gallery")
+    .upload(path, file);
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+
+  const { error } = await supabase.from("cleaner_gallery").insert({
+    cleaner_id: user.id,
+    photo_url: urlData.publicUrl,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/cleaner/profile");
+  revalidatePath("/cleaner/preview");
+  return { success: true };
+}
+
+export async function deleteGalleryPhoto(id: string, photoUrl: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  // Extract storage path from the public URL
+  const url = new URL(photoUrl);
+  const storagePath = url.pathname.split("/object/public/gallery/")[1];
+  if (storagePath) {
+    await supabase.storage.from("gallery").remove([storagePath]);
+  }
+
+  const { error } = await supabase
+    .from("cleaner_gallery")
+    .delete()
+    .eq("id", id)
+    .eq("cleaner_id", user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/cleaner/profile");
+  revalidatePath("/cleaner/preview");
+  return { success: true };
+}
+
+export async function addWeeklyAvailability(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const dayOfWeek = parseInt(formData.get("day_of_week") as string);
+  const startTime = formData.get("start_time") as string;
+  const endTime = formData.get("end_time") as string;
+
+  if (isNaN(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
+    return { error: "Invalid day." };
+  }
+  if (endTime <= startTime) {
+    return { error: "End time must be after start time." };
+  }
+
+  const { error } = await supabase.from("cleaner_weekly_availability").insert({
+    cleaner_id: user.id,
+    day_of_week: dayOfWeek,
+    start_time: startTime,
+    end_time: endTime,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/cleaner/availability");
+  return { success: true };
+}
+
+export async function deleteWeeklyAvailability(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { error } = await supabase
+    .from("cleaner_weekly_availability")
+    .delete()
+    .eq("id", id)
+    .eq("cleaner_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/cleaner/availability");
+  return { success: true };
+}
+
 export async function deleteAvailability(id: string) {
   const supabase = await createClient();
   const {

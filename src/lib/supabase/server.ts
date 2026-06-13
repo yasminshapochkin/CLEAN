@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
-export const createClient = async () => {
+// cache() deduplicates calls within the same React render tree (layout + page share one client)
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -24,4 +26,11 @@ export const createClient = async () => {
       },
     }
   );
-};
+});
+
+// Cached across the render tree — layout and page share one getUser() network call
+export const getCurrentUser = cache(async () => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+});

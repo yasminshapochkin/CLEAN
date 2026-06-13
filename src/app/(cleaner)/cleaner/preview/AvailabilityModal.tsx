@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CleanerAvailability } from "@/types/database";
+import type { CleanerAvailability, CleanerWeeklyAvailability } from "@/types/database";
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -14,9 +14,10 @@ interface DayInfo {
 interface Props {
   weeks: DayInfo[][];
   slots: CleanerAvailability[];
+  weeklySlots: CleanerWeeklyAvailability[];
 }
 
-export default function AvailabilityModal({ weeks, slots }: Props) {
+export default function AvailabilityModal({ weeks, slots, weeklySlots }: Props) {
   const [open, setOpen] = useState(false);
 
   const slotsByDate = slots.reduce<Record<string, CleanerAvailability[]>>((acc, s) => {
@@ -64,12 +65,13 @@ export default function AvailabilityModal({ weeks, slots }: Props) {
                 <div key={wi} className="grid grid-cols-7 divide-x divide-gray-100">
                   {week.map((day) => {
                     const daySlots = slotsByDate[day.dateStr] ?? [];
+                    const dow = new Date(day.dateStr + "T12:00:00").getDay();
+                    const recurring = weeklySlots.filter((s) => s.day_of_week === dow);
+                    const hasAny = daySlots.length > 0 || recurring.length > 0;
                     return (
                       <div
                         key={day.dateStr}
-                        className={`min-h-[70px] p-1 flex flex-col ${
-                          daySlots.length > 0 ? "bg-blue-50" : "bg-white"
-                        }`}
+                        className={`min-h-[70px] p-1 flex flex-col ${hasAny ? "bg-blue-50" : "bg-white"}`}
                       >
                         <div className="flex items-center gap-0.5 mb-1">
                           <span className="text-xs font-bold text-gray-700">{day.dayNum}</span>
@@ -78,6 +80,13 @@ export default function AvailabilityModal({ weeks, slots }: Props) {
                           )}
                         </div>
                         <div className="space-y-0.5">
+                          {recurring.map((slot) => (
+                            <div key={slot.id} className="bg-blue-500 rounded px-0.5 py-0.5">
+                              <span className="text-[10px] font-medium text-white leading-none">
+                                {slot.start_time.slice(0, 5)}
+                              </span>
+                            </div>
+                          ))}
                           {daySlots.map((slot) => (
                             <div key={slot.id} className="bg-blue-500 rounded px-0.5 py-0.5">
                               <span className="text-[10px] font-medium text-white leading-none">
