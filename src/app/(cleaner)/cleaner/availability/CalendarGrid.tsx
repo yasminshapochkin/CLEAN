@@ -115,7 +115,7 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
     if (selected.size === 0) return;
     setLoading(true);
     setError(null);
-    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l))) {
+    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l) && !existingLabels.has(l))) {
       const ts = TIME_SLOTS.find((t) => t.label === label)!;
       const formData = new FormData();
       formData.set("date", panel.dateStr);
@@ -137,14 +137,19 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
     }
   }
 
-  const panelSlots = slotsByDate[panel.dateStr] ?? [];
+  const panelSlots = [...(slotsByDate[panel.dateStr] ?? [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
   const panelBookings = bookingsByDate[panel.dateStr] ?? [];
-  const panelRecurring = panel.dateStr
+  const panelRecurring = [...(panel.dateStr
     ? weeklySlots.filter((s) => {
         const d = new Date(panel.dateStr + "T12:00:00");
         return s.day_of_week === d.getDay();
       })
-    : [];
+    : [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  const existingLabels = new Set([
+    ...panelRecurring.map((s) => slotLabel(s.start_time, s.end_time)),
+    ...panelSlots.map((s) => slotLabel(s.start_time, s.end_time)),
+  ]);
 
   return (
     <>
@@ -192,8 +197,8 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
           >
             {row.map((day) => {
               const dateStr = toLocalDateStr(day);
-              const daySlots = slotsByDate[dateStr] ?? [];
-              const recurring = weeklySlots.filter((s) => s.day_of_week === day.getDay());
+              const daySlots = [...(slotsByDate[dateStr] ?? [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
+              const recurring = [...weeklySlots.filter((s) => s.day_of_week === day.getDay())].sort((a, b) => a.start_time.localeCompare(b.start_time));
               const dayBookings = bookingsByDate[dateStr] ?? [];
               const past = isPast(day);
               const today = isToday(day);
@@ -363,9 +368,12 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
                       <button
                         key={ts.label}
                         type="button"
+                        disabled={existingLabels.has(ts.label)}
                         onClick={() => toggleSlot(ts.label)}
                         className={`rounded-xl border-2 py-3 text-center transition-colors ${
-                          selected.has(ts.label)
+                          existingLabels.has(ts.label)
+                            ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
+                            : selected.has(ts.label)
                             ? "border-blue-600 bg-blue-600 text-white"
                             : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
                         }`}

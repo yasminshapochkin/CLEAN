@@ -52,7 +52,7 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
     if (selected.size === 0) return;
     setLoading(true);
     setError(null);
-    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l))) {
+    for (const label of TIME_SLOTS.map((t) => t.label).filter((l) => selected.has(l) && !modalExistingLabels.has(l))) {
       const ts = TIME_SLOTS.find((t) => t.label === label)!;
       const formData = new FormData();
       formData.set("day_of_week", String(modal.day));
@@ -76,6 +76,9 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
   }
 
   const modalDayLabel = DAYS.find((d) => d.value === modal.day)?.label ?? "";
+  const modalExistingLabels = new Set(
+    (slotsByDay[modal.day] ?? []).map((s) => slotLabel(s.start_time, s.end_time))
+  );
 
   return (
     <>
@@ -124,9 +127,12 @@ export default function AvailabilityGrid({ slots: initialSlots }: Props) {
                   <button
                     key={ts.label}
                     type="button"
+                    disabled={modalExistingLabels.has(ts.label)}
                     onClick={() => toggleSlot(ts.label)}
                     className={`rounded-xl border-2 py-4 text-center transition-colors ${
-                      selected.has(ts.label)
+                      modalExistingLabels.has(ts.label)
+                        ? "border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed"
+                        : selected.has(ts.label)
                         ? "border-blue-600 bg-blue-600 text-white"
                         : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
                     }`}
