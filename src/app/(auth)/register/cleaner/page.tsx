@@ -16,6 +16,8 @@ function Spinner() {
 export default function CleanerOnboardingPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<{ email: string; password: string } | null>(null);
 
@@ -35,6 +37,24 @@ export default function CleanerOnboardingPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+
+    const fullName = formData.get("full_name") as string;
+    if (!/^[a-zA-Z\s]+$/.test(fullName) || !fullName.trim().includes(" ")) {
+      setNameError("invalid");
+      setLoading(false);
+      return;
+    }
+    setNameError(null);
+
+    const rawPhone = formData.get("phone") as string;
+    if (!/^05\d-?\d{7}$/.test(rawPhone)) {
+      setPhoneError("invalid");
+      setLoading(false);
+      return;
+    }
+    setPhoneError(null);
+    const phone = rawPhone.replace("-", "");
+
     const supabase = createClient();
 
     // Create the account now that the user has filled in all their details
@@ -55,8 +75,6 @@ export default function CleanerOnboardingPage() {
       return;
     }
 
-    const fullName = formData.get("full_name") as string;
-    const phone = formData.get("phone") as string;
     const bio = formData.get("bio") as string;
     const yearsExp = parseInt(formData.get("years_experience") as string) || 0;
     const languagesRaw = formData.get("languages") as string;
@@ -150,16 +168,19 @@ export default function CleanerOnboardingPage() {
                 type="text"
                 name="full_name"
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full border rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${nameError ? "border-red-400" : "border-gray-300"}`}
               />
+              {nameError && <p className="text-xs text-red-500 mt-1">Please enter your full name.</p>}
             </div>
             <div>
               <label className="block text-base font-medium text-gray-700 mb-1">Phone</label>
               <input
                 type="tel"
                 name="phone"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                className={`w-full border rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${phoneError ? "border-red-400" : "border-gray-300"}`}
               />
+              {phoneError && <p className="text-xs text-red-500 mt-1">Please enter a valid phone number.</p>}
             </div>
           </div>
 
