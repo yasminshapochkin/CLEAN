@@ -44,7 +44,7 @@ const translations = {
       error: 'Something went wrong. Please try again.',
       cleanerFound: '{count} cleaner found',
       cleanersFound: '{count} cleaners found',
-      in: 'in',
+      in: 'in ',
     },
     cleanerCard: {
       viewProfile: 'View Profile',

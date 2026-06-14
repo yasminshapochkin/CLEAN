@@ -31,7 +31,7 @@ export function BrowseResults({ hasFilters, error, cleaners, location }: Props) 
         <>
           <p className="text-sm text-gray-600 mb-4">
             {t(cleaners.length === 1 ? 'browse.cleanerFound' : 'browse.cleanersFound', { count: cleaners.length })}
-            {location && <> {t('browse.in')} <span className="font-semibold text-purple-600">{location}</span></>}
+            {location && <> {t('browse.in')}<span className="font-semibold text-purple-600">{location}</span></>}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {cleaners.map(c => <CleanerCard key={c.id} cleaner={c} />)}
