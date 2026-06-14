@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { ROLE_HOME } from "@/lib/roleHome";
 import type { UserRole } from "@/types/database";
 
 export async function signIn(formData: FormData) {
@@ -23,7 +24,7 @@ export async function signIn(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  redirect(`/${profile?.role ?? "customer"}/dashboard`);
+  redirect(ROLE_HOME[(profile?.role as UserRole) ?? "customer"] ?? "/login");
 }
 
 export async function signUp(
