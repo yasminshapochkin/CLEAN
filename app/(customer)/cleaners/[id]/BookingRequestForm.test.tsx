@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BookingRequestForm } from './BookingRequestForm'
+import { getStoredBookings } from '@/lib/mockBookingsStore'
 import type { CleanerResult } from '@/lib/types/cleaner'
 
 const cleaner: CleanerResult = {
@@ -21,6 +22,10 @@ async function openForm(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('BookingRequestForm', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it('hides the form fields until Request Booking is clicked', () => {
     render(<BookingRequestForm cleaner={cleaner} />)
 
@@ -83,5 +88,28 @@ describe('BookingRequestForm', () => {
 
     expect(screen.getByText(/booking request sent/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/date/i)).not.toBeInTheDocument()
+  })
+
+  it('adds the booking to the mock bookings store on submit', async () => {
+    const user = userEvent.setup()
+    render(<BookingRequestForm cleaner={cleaner} />)
+    await openForm(user)
+
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2026-07-01' } })
+    fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: '09:00' } })
+    await user.type(screen.getByLabelText(/address/i), '12 Rothschild Blvd, Tel Aviv')
+    await user.click(screen.getByRole('button', { name: /send request/i }))
+
+    const stored = getStoredBookings()
+    expect(stored).toHaveLength(1)
+    expect(stored[0]).toMatchObject({
+      cleaner_name: cleaner.full_name,
+      service_type: cleaner.service_types[0],
+      scheduled_date: '2026-07-01',
+      scheduled_start: '09:00',
+      duration_hours: 2,
+      address: '12 Rothschild Blvd, Tel Aviv',
+      status: 'pending',
+    })
   })
 })

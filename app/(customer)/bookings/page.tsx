@@ -1,69 +1,19 @@
 // PREVIEW MOCK — remove auth + inject fake data for visual testing. Revert before merging.
+'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BookingCard } from './BookingCard'
+import { MOCK_BOOKINGS } from '@/lib/mockData/bookings'
+import { getStoredBookings } from '@/lib/mockBookingsStore'
 import type { BookingResult } from '@/lib/types/booking'
 
-const MOCK_BOOKINGS: BookingResult[] = [
-  {
-    id: '1',
-    cleaner_name: 'Sarah M.',
-    cleaner_avatar_url: null,
-    service_type: 'residential',
-    scheduled_date: '2026-06-15',
-    scheduled_start: '09:00',
-    duration_hours: 3,
-    address: '12 Rothschild Blvd, Tel Aviv',
-    notes: 'Please bring eco-friendly products if possible.',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    cleaner_name: 'David K.',
-    cleaner_avatar_url: null,
-    service_type: 'commercial',
-    scheduled_date: '2026-06-18',
-    scheduled_start: '14:00',
-    duration_hours: 4,
-    address: '8 HaArba\'a St, Tel Aviv',
-    status: 'accepted',
-  },
-  {
-    id: '3',
-    cleaner_name: 'Lena R.',
-    cleaner_avatar_url: null,
-    service_type: 'residential',
-    scheduled_date: '2026-06-05',
-    scheduled_start: '10:00',
-    duration_hours: 2,
-    address: '45 Dizengoff St, Tel Aviv',
-    status: 'completed',
-  },
-  {
-    id: '4',
-    cleaner_name: 'Yosef B.',
-    cleaner_avatar_url: null,
-    service_type: 'commercial',
-    scheduled_date: '2026-06-02',
-    scheduled_start: '08:00',
-    duration_hours: 5,
-    address: '3 Herzl St, Herzliya',
-    status: 'declined',
-  },
-  {
-    id: '5',
-    cleaner_name: 'Anna P.',
-    cleaner_avatar_url: null,
-    service_type: 'residential',
-    scheduled_date: '2026-05-28',
-    scheduled_start: '11:00',
-    duration_hours: 1,
-    address: '20 Allenby St, Tel Aviv',
-    status: 'cancelled',
-  },
-]
+export default function BookingsPage() {
+  const [bookings, setBookings] = useState<BookingResult[]>(MOCK_BOOKINGS)
 
-export default async function BookingsPage() {
-  const bookings = MOCK_BOOKINGS
+  useEffect(() => {
+    setBookings([...getStoredBookings(), ...MOCK_BOOKINGS])
+  }, [])
+
   const error = null
 
   return (

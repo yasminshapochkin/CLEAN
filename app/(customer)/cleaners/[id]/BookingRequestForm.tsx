@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
+import { addBooking } from '@/lib/mockBookingsStore'
 import type { CleanerResult } from '@/lib/types/cleaner'
+import type { BookingResult } from '@/lib/types/booking'
 
 const DURATIONS = [1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -16,6 +18,21 @@ export function BookingRequestForm({ cleaner }: { cleaner: CleanerResult }) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    const booking: BookingResult = {
+      id: `${cleaner.id}-${Date.now()}`,
+      cleaner_name: cleaner.full_name,
+      cleaner_avatar_url: cleaner.avatar_url,
+      service_type: serviceType as BookingResult['service_type'],
+      scheduled_date: date,
+      scheduled_start: startTime,
+      duration_hours: duration,
+      address,
+      notes: notes || undefined,
+      status: 'pending',
+    }
+    addBooking(booking)
+
     setSubmitted(true)
   }
 
