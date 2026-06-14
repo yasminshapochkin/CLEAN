@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithLanguage as render } from '@/lib/i18n/testUtils'
 import { CleanerCard } from './CleanerCard'
 import type { CleanerResult } from '@/lib/types/cleaner'
 

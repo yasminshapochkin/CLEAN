@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithLanguage as render } from '@/lib/i18n/testUtils'
 import { BookingCard } from './BookingCard'
 import type { BookingResult } from '@/lib/types/booking'
 

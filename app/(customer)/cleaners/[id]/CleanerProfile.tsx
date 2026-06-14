@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { BookingRequestForm } from './BookingRequestForm'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { CleanerResult } from '@/lib/types/cleaner'
 
 const SERVICE_BADGE: Record<string, string> = {
@@ -9,12 +10,13 @@ const SERVICE_BADGE: Record<string, string> = {
 }
 
 export function CleanerProfile({ cleaner }: { cleaner: CleanerResult }) {
+  const { t } = useLanguage()
   const initial = cleaner.full_name.charAt(0).toUpperCase()
 
   return (
     <div className="max-w-2xl mx-auto">
       <Link href="/browse" className="text-sm text-indigo-600 hover:underline mb-4 inline-block">
-        ← Back to Browse
+        {t('cleanerProfile.backToBrowse')}
       </Link>
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -33,7 +35,7 @@ export function CleanerProfile({ cleaner }: { cleaner: CleanerResult }) {
           <div>
             <h1 className="text-xl font-bold text-gray-900">{cleaner.full_name}</h1>
             <p className="text-sm text-gray-500">
-              {cleaner.distance_km.toFixed(1)}km away · {cleaner.years_experience} yrs exp
+              {t('common.kmAway', { km: cleaner.distance_km.toFixed(1) })} · {t('common.yearsExp', { years: cleaner.years_experience })}
               {cleaner.area && <> · 📍 {cleaner.area}</>}
             </p>
           </div>
@@ -44,7 +46,7 @@ export function CleanerProfile({ cleaner }: { cleaner: CleanerResult }) {
         <div className="flex gap-2 flex-wrap mb-4">
           {cleaner.service_types.map(type => (
             <span key={type} className={`text-xs px-2 py-0.5 rounded font-medium ${SERVICE_BADGE[type] ?? 'bg-gray-100 text-gray-700'}`}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}
+              {t(`common.${type}`)}
             </span>
           ))}
           {cleaner.languages.length > 0 && (

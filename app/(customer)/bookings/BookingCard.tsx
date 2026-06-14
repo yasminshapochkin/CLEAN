@@ -1,3 +1,4 @@
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { BookingResult, BookingStatus } from '@/lib/types/booking'
 
 const STATUS_BADGE: Record<BookingStatus, string> = {
@@ -6,14 +7,6 @@ const STATUS_BADGE: Record<BookingStatus, string> = {
   declined: 'bg-red-100 text-red-700',
   completed: 'bg-blue-100 text-blue-700',
   cancelled: 'bg-gray-100 text-gray-600',
-}
-
-const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending: 'Pending',
-  accepted: 'Accepted',
-  declined: 'Declined',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
 }
 
 const STATUS_ACCENT: Record<BookingStatus, string> = {
@@ -39,8 +32,8 @@ function formatDate(dateStr: string) {
 }
 
 export function BookingCard({ booking }: { booking: BookingResult }) {
+  const { t } = useLanguage()
   const initial = booking.cleaner_name.charAt(0).toUpperCase()
-  const serviceLabel = booking.service_type.charAt(0).toUpperCase() + booking.service_type.slice(1)
 
   return (
     <div className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 border-t-4 ${STATUS_ACCENT[booking.status]} hover:shadow-lg transition-shadow`}>
@@ -60,12 +53,12 @@ export function BookingCard({ booking }: { booking: BookingResult }) {
           <div>
             <p className="font-bold text-gray-900">{booking.cleaner_name}</p>
             <p className="text-sm text-gray-500">
-              {formatDate(booking.scheduled_date)} · {booking.scheduled_start} · {booking.duration_hours} hr{booking.duration_hours !== 1 ? 's' : ''}
+              {formatDate(booking.scheduled_date)} · {booking.scheduled_start} · {booking.duration_hours} {t(booking.duration_hours !== 1 ? 'bookingCard.hours' : 'bookingCard.hour')}
             </p>
           </div>
         </div>
         <span className={`text-xs px-2 py-0.5 rounded font-semibold whitespace-nowrap ${STATUS_BADGE[booking.status]}`}>
-          {STATUS_LABEL[booking.status]}
+          {t(`bookingCard.status.${booking.status}`)}
         </span>
       </div>
 
@@ -73,7 +66,7 @@ export function BookingCard({ booking }: { booking: BookingResult }) {
 
       <div className="flex gap-2 flex-wrap mb-3">
         <span className={`text-xs px-2 py-0.5 rounded font-medium ${SERVICE_BADGE[booking.service_type]}`}>
-          {serviceLabel}
+          {t(`common.${booking.service_type}`)}
         </span>
       </div>
 

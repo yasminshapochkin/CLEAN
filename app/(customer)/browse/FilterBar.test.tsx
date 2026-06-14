@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithLanguage as render } from '@/lib/i18n/testUtils'
 import { FilterBar } from './FilterBar'
 
 const mockPush = jest.fn()

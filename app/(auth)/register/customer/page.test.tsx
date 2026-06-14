@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithLanguage as render } from '@/lib/i18n/testUtils'
 import CustomerOnboardingPage from './page'
 import { createClient } from '@/lib/supabase/client'
 import { geocodeAddress } from '@/lib/geocode'

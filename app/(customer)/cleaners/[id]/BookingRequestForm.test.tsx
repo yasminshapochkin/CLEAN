@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderWithLanguage as render } from '@/lib/i18n/testUtils'
 import { BookingRequestForm } from './BookingRequestForm'
 import { getStoredBookings } from '@/lib/mockBookingsStore'
 import type { CleanerResult } from '@/lib/types/cleaner'

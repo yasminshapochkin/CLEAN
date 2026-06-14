@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import type { CustomerProfile } from '@/lib/types/profile'
 
 type Props = {
@@ -13,13 +14,8 @@ const SERVICE_TYPE_BADGE: Record<CustomerProfile['preferred_service_type'], stri
   both: 'bg-yellow-100 text-yellow-800',
 }
 
-const SERVICE_TYPE_LABEL: Record<CustomerProfile['preferred_service_type'], string> = {
-  residential: 'Residential',
-  commercial: 'Commercial',
-  both: 'Both',
-}
-
 export function ProfileForm({ defaultValues, onSave }: Props) {
+  const { t } = useLanguage()
   const [fullName, setFullName] = useState(defaultValues.full_name)
   const [phone, setPhone] = useState(defaultValues.phone)
   const [bio, setBio] = useState(defaultValues.bio)
@@ -66,65 +62,65 @@ export function ProfileForm({ defaultValues, onSave }: Props) {
           </div>
           <label
             htmlFor="avatar"
-            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white text-indigo-600 flex items-center justify-center text-xs cursor-pointer shadow-sm"
+            className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-white text-indigo-600 flex items-center justify-center text-xs cursor-pointer shadow-sm"
           >
             📷
-            <span className="sr-only">Change Photo</span>
+            <span className="sr-only">{t('profileForm.changePhoto')}</span>
           </label>
           <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
         <div>
-          <p className="text-lg font-bold">{fullName || 'Your Name'}</p>
-          <p className="text-sm text-white/80">📍 {address || 'Add your address'}</p>
+          <p className="text-lg font-bold">{fullName || t('profileForm.yourName')}</p>
+          <p className="text-sm text-white/80">📍 {address || t('profileForm.addAddress')}</p>
           <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded font-medium ${SERVICE_TYPE_BADGE[preferredServiceType]}`}>
-            {SERVICE_TYPE_LABEL[preferredServiceType]}
+            {t(`common.${preferredServiceType}`)}
           </span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 border-t-4 border-t-indigo-400 flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="full_name" className={labelClass}>👤 Full Name</label>
+          <label htmlFor="full_name" className={labelClass}>👤 {t('profileForm.fullName')}</label>
           <input id="full_name" type="text" value={fullName} onChange={e => setFullName(e.target.value)} required className={fieldClass} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="phone" className={labelClass}>📞 Phone</label>
+          <label htmlFor="phone" className={labelClass}>📞 {t('profileForm.phone')}</label>
           <input id="phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={fieldClass} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="bio" className={labelClass}>📝 Bio</label>
+          <label htmlFor="bio" className={labelClass}>📝 {t('profileForm.bio')}</label>
           <textarea id="bio" rows={3} value={bio} onChange={e => setBio(e.target.value)} className={`${fieldClass} resize-none`} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="preferred_service_type" className={labelClass}>🧹 Preferred Service Type</label>
+          <label htmlFor="preferred_service_type" className={labelClass}>🧹 {t('profileForm.preferredServiceType')}</label>
           <select
             id="preferred_service_type"
             value={preferredServiceType}
             onChange={e => setPreferredServiceType(e.target.value as CustomerProfile['preferred_service_type'])}
             className={fieldClass}
           >
-            <option value="residential">Residential</option>
-            <option value="commercial">Commercial</option>
-            <option value="both">Both</option>
+            <option value="residential">{t('common.residential')}</option>
+            <option value="commercial">{t('common.commercial')}</option>
+            <option value="both">{t('common.both')}</option>
           </select>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="address" className={labelClass}>📍 Address</label>
+          <label htmlFor="address" className={labelClass}>📍 {t('profileForm.address')}</label>
           <input id="address" type="text" value={address} onChange={e => setAddress(e.target.value)} required className={fieldClass} />
-          <p className="text-xs text-gray-400">Used to match you with nearby cleaners.</p>
+          <p className="text-xs text-gray-400">{t('profileForm.addressHint')}</p>
         </div>
 
         {saved && (
-          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">✅ Profile updated.</p>
+          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">{t('profileForm.saved')}</p>
         )}
 
         <button type="submit"
           className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition-colors self-start shadow-sm">
-          Save Changes
+          {t('profileForm.save')}
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { CleanerResult } from '@/lib/types/cleaner'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 const SERVICE_BADGE: Record<string, string> = {
   residential: 'bg-indigo-100 text-indigo-700',
@@ -14,6 +15,7 @@ const SERVICE_ACCENT: Record<string, string> = {
 }
 
 export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
+  const { t } = useLanguage()
   const initial = cleaner.full_name.charAt(0).toUpperCase()
   const bioExcerpt = cleaner.bio.length > 80 ? cleaner.bio.slice(0, 80) + '…' : cleaner.bio
   const serviceLabel =
@@ -38,7 +40,7 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
         <div>
           <p className="font-bold text-gray-900">{cleaner.full_name}</p>
           <p className="text-sm text-gray-500">
-            {cleaner.distance_km.toFixed(1)}km away · {cleaner.years_experience} yrs exp
+            {t('common.kmAway', { km: cleaner.distance_km.toFixed(1) })} · {t('common.yearsExp', { years: cleaner.years_experience })}
           </p>
         </div>
       </div>
@@ -47,7 +49,7 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
 
       <div className="flex gap-2 flex-wrap mb-3">
         <span className={`text-xs px-2 py-0.5 rounded font-medium ${SERVICE_BADGE[serviceLabel]}`}>
-          {serviceLabel.charAt(0).toUpperCase() + serviceLabel.slice(1)}
+          {t(`common.${serviceLabel}`)}
         </span>
         {cleaner.area && (
           <span className="text-xs px-2 py-0.5 rounded bg-pink-100 text-pink-700 font-medium">
@@ -62,12 +64,12 @@ export function CleanerCard({ cleaner }: { cleaner: CleanerResult }) {
       </div>
 
       <div className="flex justify-between items-center">
-        <span className="font-bold text-gray-900">₪{cleaner.hourly_rate}/hr</span>
+        <span className="font-bold text-gray-900">₪{cleaner.hourly_rate}{t('common.perHour')}</span>
         <Link
           href={`/cleaners/${cleaner.id}`}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
         >
-          View Profile
+          {t('cleanerCard.viewProfile')}
         </Link>
       </div>
     </div>

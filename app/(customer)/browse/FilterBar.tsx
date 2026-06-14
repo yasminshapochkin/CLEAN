@@ -1,22 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const TIME_OF_DAY = [
-  { value: 'morning', label: 'Morning' },
-  { value: 'noon', label: 'Noon' },
-  { value: 'evening', label: 'Evening' },
-  { value: 'night', label: 'Night' },
-]
-
-const SORT_OPTIONS = [
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'experience_desc', label: 'Experience: High to Low' },
-  { value: 'experience_asc', label: 'Experience: Low to High' },
-]
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 type Props = {
   defaultValues?: { days?: number[]; timeOfDay?: string[]; type: string; location?: string; sort?: string }
@@ -24,6 +9,24 @@ type Props = {
 
 export function FilterBar({ defaultValues }: Props) {
   const router = useRouter()
+  const { t, messages } = useLanguage()
+
+  const DAYS = messages.filterBar.dayNames
+
+  const TIME_OF_DAY = [
+    { value: 'morning', label: t('filterBar.morning') },
+    { value: 'noon', label: t('filterBar.noon') },
+    { value: 'evening', label: t('filterBar.evening') },
+    { value: 'night', label: t('filterBar.night') },
+  ]
+
+  const SORT_OPTIONS = [
+    { value: 'price_asc', label: t('filterBar.priceLowToHigh') },
+    { value: 'price_desc', label: t('filterBar.priceHighToLow') },
+    { value: 'experience_desc', label: t('filterBar.experienceHighToLow') },
+    { value: 'experience_asc', label: t('filterBar.experienceLowToHigh') },
+  ]
+
   const [days, setDays] = useState<number[]>(defaultValues?.days ?? [])
   const [daysOpen, setDaysOpen] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState<string[]>(defaultValues?.timeOfDay ?? [])
@@ -78,14 +81,14 @@ export function FilterBar({ defaultValues }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex gap-4 items-end p-4 bg-white border-b border-gray-200 flex-wrap">
       <div className="flex flex-col gap-1 relative">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Days</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('filterBar.days')}</span>
         <button
           type="button"
           onClick={() => setDaysOpen(o => !o)}
           aria-expanded={daysOpen}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]"
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-start bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[100px]"
         >
-          Days{days.length > 0 && ` (${days.length})`}
+          {t('filterBar.days')}{days.length > 0 && ` (${days.length})`}
         </button>
         {daysOpen && (
           <div className="absolute z-10 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2 flex flex-col gap-1 min-w-[140px]">
@@ -96,7 +99,7 @@ export function FilterBar({ defaultValues }: Props) {
                 onChange={toggleAllDays}
                 className="accent-indigo-600"
               />
-              All Days
+              {t('filterBar.allDays')}
             </label>
             {DAYS.map((d, i) => (
               <label
@@ -117,14 +120,14 @@ export function FilterBar({ defaultValues }: Props) {
       </div>
 
       <div className="flex flex-col gap-1 relative">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Time of Day</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('filterBar.timeOfDay')}</span>
         <button
           type="button"
           onClick={() => setTimeOpen(o => !o)}
           aria-expanded={timeOpen}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[120px]"
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-start bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[120px]"
         >
-          Time of Day{timeOfDay.length > 0 && ` (${timeOfDay.length})`}
+          {t('filterBar.timeOfDay')}{timeOfDay.length > 0 && ` (${timeOfDay.length})`}
         </button>
         {timeOpen && (
           <div className="absolute z-10 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2 flex flex-col gap-1 min-w-[140px]">
@@ -135,7 +138,7 @@ export function FilterBar({ defaultValues }: Props) {
                 onChange={toggleAllTimes}
                 className="accent-indigo-600"
               />
-              Anytime
+              {t('filterBar.anytime')}
             </label>
             {TIME_OF_DAY.map(t => (
               <label
@@ -156,28 +159,28 @@ export function FilterBar({ defaultValues }: Props) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="type" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service Type</label>
+        <label htmlFor="type" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('filterBar.serviceType')}</label>
         <select id="type" value={type} onChange={e => setType(e.target.value)} required
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Select type</option>
-          <option value="residential">Residential</option>
-          <option value="commercial">Commercial</option>
-          <option value="both">Both</option>
+          <option value="">{t('filterBar.selectType')}</option>
+          <option value="residential">{t('common.residential')}</option>
+          <option value="commercial">{t('common.commercial')}</option>
+          <option value="both">{t('common.both')}</option>
         </select>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="location" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Location</label>
+        <label htmlFor="location" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('filterBar.location')}</label>
         <input id="location" type="text" value={location} onChange={e => setLocation(e.target.value)}
-          placeholder="e.g. Tel Aviv"
+          placeholder={t('filterBar.locationPlaceholder')}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="sort" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sort By</label>
+        <label htmlFor="sort" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('filterBar.sortBy')}</label>
         <select id="sort" value={sort} onChange={e => setSort(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Default</option>
+          <option value="">{t('filterBar.sortDefault')}</option>
           {SORT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>
@@ -185,11 +188,11 @@ export function FilterBar({ defaultValues }: Props) {
       <div className="flex gap-2">
         <button type="submit"
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition-colors">
-          Search
+          {t('filterBar.search')}
         </button>
         <button type="button" onClick={handleClear}
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-5 py-2 rounded-md font-semibold text-sm transition-colors">
-          Clear
+          {t('filterBar.clear')}
         </button>
       </div>
     </form>
