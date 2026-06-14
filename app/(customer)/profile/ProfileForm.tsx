@@ -25,7 +25,17 @@ export function ProfileForm({ defaultValues, onSave }: Props) {
   const [bio, setBio] = useState(defaultValues.bio)
   const [preferredServiceType, setPreferredServiceType] = useState(defaultValues.preferred_service_type)
   const [address, setAddress] = useState(defaultValues.address)
+  const [avatarUrl, setAvatarUrl] = useState(defaultValues.avatar_url)
   const [saved, setSaved] = useState(false)
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => setAvatarUrl(reader.result as string)
+    reader.readAsDataURL(file)
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +45,7 @@ export function ProfileForm({ defaultValues, onSave }: Props) {
       bio,
       preferred_service_type: preferredServiceType,
       address,
+      avatar_url: avatarUrl,
     })
     setSaved(true)
   }
@@ -45,8 +56,22 @@ export function ProfileForm({ defaultValues, onSave }: Props) {
   return (
     <div className="flex flex-col gap-6 max-w-lg">
       <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 shadow-md text-white flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center font-bold text-2xl shrink-0">
-          {fullName.charAt(0).toUpperCase() || '?'}
+        <div className="relative w-16 h-16 shrink-0">
+          <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center font-bold text-2xl overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile photo" className="w-full h-full object-cover" />
+            ) : (
+              fullName.charAt(0).toUpperCase() || '?'
+            )}
+          </div>
+          <label
+            htmlFor="avatar"
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white text-indigo-600 flex items-center justify-center text-xs cursor-pointer shadow-sm"
+          >
+            📷
+            <span className="sr-only">Change Photo</span>
+          </label>
+          <input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
         <div>
           <p className="text-lg font-bold">{fullName || 'Your Name'}</p>

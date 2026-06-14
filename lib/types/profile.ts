@@ -4,4 +4,5 @@ export type CustomerProfile = {
   bio: string
   preferred_service_type: 'residential' | 'commercial' | 'both'
   address: string
+  avatar_url: string | null
 }

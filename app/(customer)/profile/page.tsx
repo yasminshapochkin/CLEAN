@@ -9,6 +9,7 @@ const MOCK_PROFILE: CustomerProfile = {
   bio: 'Looking for a reliable cleaner for my apartment, ideally weekly.',
   preferred_service_type: 'residential',
   address: '12 Rothschild Blvd, Tel Aviv',
+  avatar_url: null,
 }
 
 export default async function ProfilePage() {

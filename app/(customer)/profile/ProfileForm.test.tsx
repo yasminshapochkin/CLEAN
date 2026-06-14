@@ -9,6 +9,7 @@ const baseProfile: CustomerProfile = {
   bio: 'Looking for a reliable cleaner for my apartment.',
   preferred_service_type: 'residential',
   address: '12 Rothschild Blvd, Tel Aviv',
+  avatar_url: null,
 }
 
 describe('ProfileForm', () => {
@@ -51,5 +52,34 @@ describe('ProfileForm', () => {
     await user.click(screen.getByRole('button', { name: /save/i }))
 
     expect(screen.getByText(/profile updated/i)).toBeInTheDocument()
+  })
+
+  it('shows the initial when there is no avatar photo', () => {
+    render(<ProfileForm defaultValues={baseProfile} />)
+
+    expect(screen.queryByRole('img', { name: /profile photo/i })).not.toBeInTheDocument()
+  })
+
+  it('shows the avatar image when avatar_url is set', () => {
+    render(<ProfileForm defaultValues={{ ...baseProfile, avatar_url: 'https://example.com/me.jpg' }} />)
+
+    expect(screen.getByRole('img', { name: /profile photo/i })).toHaveAttribute('src', 'https://example.com/me.jpg')
+  })
+
+  it('lets the user pick a new photo, previews it, and includes it when saving', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(<ProfileForm defaultValues={baseProfile} onSave={onSave} />)
+
+    const file = new File(['avatar-bytes'], 'avatar.png', { type: 'image/png' })
+    await user.upload(screen.getByLabelText(/change photo/i), file)
+
+    expect(await screen.findByRole('img', { name: /profile photo/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ avatar_url: expect.stringMatching(/^data:image\/png/) })
+    )
   })
 })
