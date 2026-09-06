@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addAvailability, deleteAvailability } from "../../actions";
@@ -116,9 +116,13 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
   const [panel, setPanel] = useState<DayPanel>({ open: false, dateStr: "", past: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("12:00");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("13:00");
   const [note, setNote] = useState("");
+  // The add form is collapsed by default — an empty day just looks empty,
+  // and the + button (bottom-right of the panel) reveals it.
+  const [addOpen, setAddOpen] = useState(false);
+  const panelScrollRef = useRef<HTMLDivElement>(null);
 
   const cells = buildMonthCells(viewDate, true);
   const rows: Cell[][] = [];
@@ -153,15 +157,24 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
 
   function openPanel(day: Date) {
     setError(null);
-    setStartTime("08:00");
-    setEndTime("12:00");
+    setStartTime("09:00");
+    setEndTime("13:00");
     setNote("");
+    setAddOpen(false);
     setPanel({ open: true, dateStr: toLocalDateStr(day), past: isPast(day) });
   }
 
   function closePanel() {
     setPanel({ open: false, dateStr: "", past: false });
     setError(null);
+  }
+
+  function toggleAdd() {
+    setAddOpen((o) => {
+      const next = !o;
+      if (next) requestAnimationFrame(() => panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }));
+      return next;
+    });
   }
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
@@ -179,6 +192,11 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
     formData.set("note", note);
     const result = await addAvailability(formData);
     if (result?.error) { setError(result.error); setLoading(false); return; }
+    // Reset to defaults, ready for another slot the same day — the form
+    // stays open since adding several times for one day is the common case.
+    setStartTime("09:00");
+    setEndTime("13:00");
+    setNote("");
     router.refresh();
     setLoading(false);
   }
@@ -274,6 +292,12 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
               const colorClass = past
                 ? "bg-gray-50 hover:bg-gray-100 opacity-40"
                 : dayCardColor([...daySlots, ...recurring], hasAccepted, hasPending);
+              // Quick-glance preview of what's scheduled — up to 2 hour-only
+              // time ranges from this day's own added slots, no notes, "+N"
+              // for the rest. Full detail (minutes, notes) is one tap away.
+              const chipTextColor = hasAccepted ? "text-blue-50" : "text-blue-800";
+              const visibleSlots = daySlots.slice(0, 2);
+              const extraSlotCount = daySlots.length - visibleSlots.length;
 
               return (
                 <button
@@ -284,6 +308,16 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
                   <span className="text-xl font-bold w-10 h-10 flex items-center justify-center text-gray-900">
                     {day.getDate()}
                   </span>
+                  {visibleSlots.length > 0 && (
+                    <div className={`flex flex-col items-center leading-tight ${chipTextColor}`}>
+                      {visibleSlots.map((slot) => (
+                        <span key={slot.id} className="text-[10px] font-semibold tabular-nums">
+                          {parseInt(slot.start_time.slice(0, 2), 10)}-{parseInt(slot.end_time.slice(0, 2), 10)}
+                        </span>
+                      ))}
+                      {extraSlotCount > 0 && <span className="text-[10px] font-semibold">+{extraSlotCount}</span>}
+                    </div>
+                  )}
                   {hasPending && (
                     <span className="mt-auto text-sm font-bold text-red-600 leading-none">
                       {dayPending.length}
@@ -319,7 +353,7 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
           onClick={closePanel}
         >
           <div
-            className="bg-white w-full sm:max-w-md sm:mx-4 sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
+            className="relative bg-white w-full sm:max-w-md sm:mx-4 sm:rounded-2xl rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel header */}
@@ -342,7 +376,21 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            {/* Floating add/close toggle — bottom-right of the panel, always
+                reachable regardless of scroll position. */}
+            {!panel.past && (
+              <button
+                type="button"
+                onClick={toggleAdd}
+                aria-label={t("avail_add_section")}
+                aria-expanded={addOpen}
+                className="absolute bottom-4 end-4 z-10 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center text-3xl font-light leading-none transition-transform active:scale-95"
+              >
+                {addOpen ? "×" : "+"}
+              </button>
+            )}
+
+            <div ref={panelScrollRef} className="flex-1 overflow-y-auto">
               {/* Pending requests — links to the requests page */}
               {panelPending.length > 0 && (
                 <Link
@@ -356,8 +404,9 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
                 </Link>
               )}
 
-              {/* Add slot — only for non-past days, right at the top so it's the first thing the cleaner does */}
-              {!panel.past && (
+              {/* Add slot — only for non-past days, revealed by the + button and
+                  shown at the top so it's the first thing the cleaner sees */}
+              {!panel.past && addOpen && (
                 <div className="px-6 pt-5 pb-5 border-b border-gray-100">
                   <p className="text-base font-semibold text-gray-700 mb-3">{t("avail_add_section")}</p>
                   <form onSubmit={handleAdd} className="space-y-4">
@@ -440,8 +489,9 @@ export default function CalendarGrid({ slots: initialSlots, weeklySlots, booking
                 </div>
               )}
 
-              {/* Slots list */}
-              <div className="px-6 py-4 space-y-3">
+              {/* Slots list — extra bottom padding so the floating +/× button
+                  never overlaps the last item. */}
+              <div className="px-6 pt-4 pb-24 space-y-3">
                 {panelRecurring.length === 0 && panelSlots.length === 0 && panelBookings.length === 0 ? (
                   panel.past && (
                     <p className="text-base text-gray-400 text-center py-4">{t("avail_no_hours_past")}</p>
