@@ -25,20 +25,39 @@ const mockedGeocode = geocodeAddress as jest.MockedFunction<typeof geocodeAddres
 
 const mockSignUp = jest.fn()
 const mockUpsert = jest.fn()
-const mockInsert = jest.fn()
+const mockGetPublicUrl = jest.fn()
 const mockFrom = jest.fn()
+const mockStorageFrom = jest.fn()
 
 beforeEach(() => {
   jest.clearAllMocks()
   localStorage.clear()
-  mockFrom.mockImplementation(() => ({ upsert: mockUpsert, insert: mockInsert }))
+  mockFrom.mockImplementation(() => ({ upsert: mockUpsert }))
   mockUpsert.mockResolvedValue({ error: null })
-  mockInsert.mockResolvedValue({ error: null })
+  mockStorageFrom.mockImplementation(() => ({ upload: jest.fn(), getPublicUrl: mockGetPublicUrl }))
   mockedCreateClient.mockReturnValue({
     auth: { signUp: mockSignUp },
     from: mockFrom,
+    storage: { from: mockStorageFrom },
   } as unknown as ReturnType<typeof createClient>)
 })
+
+async function fillRequiredStepsAndReachPreview(user: ReturnType<typeof userEvent.setup>) {
+  // Step 1 — About you: only first/last name are required.
+  await user.type(screen.getByLabelText(/first name/i), 'Jane')
+  await user.type(screen.getByLabelText(/last name/i), 'Doe')
+  await user.click(screen.getByRole('button', { name: /next/i }))
+
+  // Step 2 — Your home: only area is required.
+  await user.type(screen.getByLabelText(/area \/ town/i), '1 Rothschild Blvd, Tel Aviv')
+  await user.click(screen.getByRole('button', { name: /next/i }))
+
+  // Step 3 — Household: fully optional, just advance.
+  await user.click(screen.getByRole('button', { name: /next/i }))
+
+  // Step 4 — Preferences: fully optional, just advance to the preview.
+  await user.click(screen.getByRole('button', { name: /next/i }))
+}
 
 describe('CustomerOnboardingPage', () => {
   it('redirects to /register if no pending signup is found', () => {
@@ -47,39 +66,31 @@ describe('CustomerOnboardingPage', () => {
     expect(mockReplace).toHaveBeenCalledWith('/register')
   })
 
-  it('renders the profile form when a pending signup exists', () => {
-    localStorage.setItem(
-      'pending_signup',
-      JSON.stringify({ email: 'a@b.com', password: 'pass123' })
-    )
+  it('renders the first step (About you) when a pending signup exists', () => {
+    localStorage.setItem('pending_signup', JSON.stringify({ email: 'a@b.com', password: 'pass123' }))
 
     render(<CustomerOnboardingPage />)
 
-    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/bio/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/preferred service type/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/address/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
+    // Next is disabled until both required fields are filled.
+    expect(screen.getByRole('button', { name: /next/i })).toBeDisabled()
   })
 
-  it('creates the account, geocodes the address, and saves the profile + customer rows', async () => {
-    localStorage.setItem(
-      'pending_signup',
-      JSON.stringify({ email: 'a@b.com', password: 'pass123' })
-    )
+  it('walks through the wizard and submits, creating the account and saving profile + customer rows', async () => {
+    localStorage.setItem('pending_signup', JSON.stringify({ email: 'a@b.com', password: 'pass123' }))
     mockSignUp.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null })
     mockedGeocode.mockResolvedValue({ lat: 32.08, lng: 34.78 })
 
     const user = userEvent.setup()
     render(<CustomerOnboardingPage />)
 
-    await user.type(screen.getByLabelText(/full name/i), 'Jane Doe')
-    await user.selectOptions(screen.getByLabelText(/preferred service type/i), 'residential')
-    await user.type(screen.getByLabelText(/address/i), '1 Rothschild Blvd, Tel Aviv')
-    await user.click(screen.getByRole('button', { name: /finish/i }))
+    await fillRequiredStepsAndReachPreview(user)
+
+    // Final screen — the Next button becomes the submit CTA.
+    await user.click(screen.getByRole('button', { name: /start finding cleaners/i }))
 
     await waitFor(() => {
-      // signUp passes the role in metadata so the handle_new_user trigger
-      // branches correctly (creates customer rows, not cleaner).
       expect(mockSignUp).toHaveBeenCalledWith({
         email: 'a@b.com',
         password: 'pass123',
@@ -95,20 +106,19 @@ describe('CustomerOnboardingPage', () => {
         id: 'user-1',
         role: 'customer',
         full_name: 'Jane Doe',
-      })
+      }),
     )
 
     expect(mockFrom).toHaveBeenCalledWith('customers')
-    // The customer row is upserted (filling the handle_new_user skeleton row),
-    // not inserted — an insert would collide on customers_pkey.
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'user-1',
+        first_name: 'Jane',
+        last_name: 'Doe',
         address: '1 Rothschild Blvd, Tel Aviv',
         lat: 32.08,
         lng: 34.78,
-        preferred_service_type: 'residential',
-      })
+      }),
     )
 
     await waitFor(() => {

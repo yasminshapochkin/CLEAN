@@ -18,8 +18,11 @@ export interface Profile {
   created_at: string;
 }
 
-export type DwellingType = "apartment" | "house";
+export type DwellingType = "apartment" | "house" | "guesthouse" | "other";
 export type PetType = "dog" | "cat" | "other";
+export type UsageFrequency = "weekly" | "twice_monthly" | "occasional" | "one_time";
+export type UsualCleaningType = "regular" | "deep";
+export type CleaningPriority = "kitchen" | "bathrooms" | "floors" | "dusting" | "windows" | "linens" | "laundry" | "outdoor" | "other";
 
 export interface Customer {
   id: string;
@@ -50,6 +53,22 @@ export interface Customer {
   // Free-text notes the admin keeps on this customer. See migration
   // 0002_admin_panel_foundation.
   admin_notes: string | null;
+  // Host onboarding wizard fields (migration 0025_host_onboarding_wizard).
+  // first_name/last_name are stored separately from profiles.full_name (kept
+  // in sync as "first last" for every existing full_name reader) so a future
+  // "hide last name from cleaners" display rule has something to key off —
+  // not yet enforced anywhere.
+  first_name: string | null;
+  last_name: string | null;
+  languages: string[];
+  bedrooms: number | null;
+  bathrooms: number | null;
+  num_floors: number | null;
+  usage_frequency: UsageFrequency | null;
+  usual_cleaning_type: UsualCleaningType | null;
+  cleaning_priorities: CleaningPriority[];
+  cleaning_priorities_other: string | null;
+  home_instructions: string | null;
 }
 
 export interface Cleaner {
