@@ -14,6 +14,7 @@ import {
   StatusPill,
   btnDanger,
 } from '@/app/admin/adminTable'
+import { SearchInput } from '@/app/admin/SearchInput'
 import type { CustomerResult } from '@/lib/types/customer'
 import type { UserStatus } from '@/lib/adminUserStatus'
 
@@ -78,6 +79,7 @@ export function CustomersList({ customers: initial }: { customers: CustomerWithN
   const { t } = useLanguage()
   const [customers, setCustomers] = useState(initial)
   const [filter, setFilter] = useState<'active' | 'inactive' | 'blocked' | 'all'>('active')
+  const [search, setSearch] = useState('')
 
   async function handleDelete(id: string) {
     await deleteCustomerAdmin(id)
@@ -88,10 +90,12 @@ export function CustomersList({ customers: initial }: { customers: CustomerWithN
     setCustomers(prev => prev.map(c => (c.id === id ? { ...c, adminNotes: notes } : c)))
   }
 
-  const filtered = useMemo(
-    () => (filter === 'all' ? customers : customers.filter(c => c.userStatus === filter)),
-    [customers, filter],
-  )
+  const filtered = useMemo(() => {
+    const byStatus = filter === 'all' ? customers : customers.filter(c => c.userStatus === filter)
+    const q = search.trim().toLowerCase()
+    if (!q) return byStatus
+    return byStatus.filter(c => c.full_name.toLowerCase().includes(q) || c.address.toLowerCase().includes(q))
+  }, [customers, filter, search])
 
   const columns = [
     { key: 'name', label: t('admin.shared.name') },
@@ -113,7 +117,12 @@ export function CustomersList({ customers: initial }: { customers: CustomerWithN
     <AdminTable
       title={t('admin.customers.title')}
       count={filtered.length}
-      toolbar={<StatusFilterDropdown value={filter} onChange={(v) => setFilter(v as typeof filter)} options={filterOptions} />}
+      toolbar={
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput value={search} onChange={setSearch} />
+          <StatusFilterDropdown value={filter} onChange={(v) => setFilter(v as typeof filter)} options={filterOptions} />
+        </div>
+      }
       columns={columns}
       template={TEMPLATE}
       minWidth="min-w-[860px]"

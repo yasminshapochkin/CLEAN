@@ -9,6 +9,7 @@ jest.mock('@/app/admin/actions', () => ({
   updateApplicationNotes: jest.fn().mockResolvedValue({}),
   updateCustomerApprovalStatus: jest.fn().mockResolvedValue({}),
   updateCustomerNotes: jest.fn().mockResolvedValue({}),
+  setSeenStatus: jest.fn().mockResolvedValue({}),
 }))
 
 const cleanerApp: UnifiedApplication = {
@@ -27,6 +28,7 @@ const cleanerApp: UnifiedApplication = {
   id_document_url: null,
   admin_notes: null,
   cleans_completed: 0,
+  seen: false,
 }
 
 const customerApp: UnifiedApplication = {
@@ -45,6 +47,7 @@ const customerApp: UnifiedApplication = {
   id_document_url: null,
   admin_notes: null,
   cleans_completed: 0,
+  seen: false,
 }
 
 describe('ApplicationsList', () => {

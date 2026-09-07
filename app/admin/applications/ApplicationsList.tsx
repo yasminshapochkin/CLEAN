@@ -16,6 +16,8 @@ import {
   btnBlue,
   btnPrimary,
 } from '@/app/admin/adminTable'
+import { SeenCheckbox } from '@/app/admin/SeenCheckbox'
+import { SearchInput } from '@/app/admin/SearchInput'
 import type { ApplicationStatus, UnifiedApplication } from '@/lib/types/application'
 
 const TABS: ('all' | ApplicationStatus)[] = ['all', 'pending', 'needs_info', 'approved', 'rejected']
@@ -25,13 +27,14 @@ const CATEGORY_BADGE: Record<UnifiedApplication['category'], string> = {
   customer: 'bg-[#C0B9DD]/30 text-[#655a8a]',
 }
 
-// Name / Contact / Rate / Location / Submitted / Approved / Status / (chat, email) —
+// Seen / Name / Contact / Rate / Location / Submitted / Approved / Status / (chat, email) —
 // category (cleaner/customer) shows as a small pill under the name rather
 // than its own column, so the grid stays the same width regardless of which
 // categories are mixed in. Approve/reject/needs-info and the admin notes
 // live in the row's own expand panel (the chevron AdminRow already renders)
-// rather than a separate page.
-const TEMPLATE = 'minmax(170px,1.3fr) minmax(140px,1fr) 78px minmax(120px,0.9fr) 88px 88px 96px 84px'
+// rather than a separate page. The leading "seen" column is the shared
+// admin worklist checkbox (migration 0024) — always the first track.
+const TEMPLATE = '28px minmax(170px,1.3fr) minmax(140px,1fr) 78px minmax(120px,0.9fr) 88px 88px 96px 84px'
 
 function ApplicationRow({
   app,
@@ -69,6 +72,12 @@ function ApplicationRow({
   )
 
   const cells = [
+    <SeenCheckbox
+      key="seen"
+      entityType={isCleaner ? 'cleaner_application' : 'customer_application'}
+      entityId={app.id}
+      initialSeen={app.seen}
+    />,
     isCleaner ? (
       <Link key="n" href={`/cleaners/${app.personId}`} className="min-w-0 block hover:opacity-80 transition-opacity">
         {nameCell}
@@ -146,6 +155,7 @@ export function ApplicationsList({ applications: initial }: { applications: Unif
   const { t } = useLanguage()
   const [applications, setApplications] = useState(initial)
   const [tab, setTab] = useState<'all' | ApplicationStatus>('all')
+  const [search, setSearch] = useState('')
 
   async function handleSaveNotes(app: UnifiedApplication, notes: string) {
     if (app.category === 'cleaner') {
@@ -171,9 +181,14 @@ export function ApplicationsList({ applications: initial }: { applications: Unif
     )
   }
 
-  const filtered = tab === 'all' ? applications : applications.filter(a => a.status === tab)
+  const byTab = tab === 'all' ? applications : applications.filter(a => a.status === tab)
+  const q = search.trim().toLowerCase()
+  const filtered = q
+    ? byTab.filter(a => a.full_name.toLowerCase().includes(q) || a.address.toLowerCase().includes(q) || a.submitted_at.toLowerCase().includes(q))
+    : byTab
 
   const columns = [
+    { key: 'seen', label: '' },
     { key: 'name', label: t('admin.shared.name') },
     { key: 'contact', label: t('admin.shared.contact') },
     { key: 'rate', label: t('admin.shared.rate') },
@@ -185,7 +200,9 @@ export function ApplicationsList({ applications: initial }: { applications: Unif
   ]
 
   const toolbar = (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-col items-end gap-2">
+      <SearchInput value={search} onChange={setSearch} />
+      <div className="flex gap-2 flex-wrap justify-end">
       {TABS.map(tabKey => {
         const count = tabKey === 'all' ? applications.length : applications.filter(a => a.status === tabKey).length
         return (
@@ -203,6 +220,7 @@ export function ApplicationsList({ applications: initial }: { applications: Unif
           </button>
         )
       })}
+      </div>
     </div>
   )
 
@@ -212,7 +230,7 @@ export function ApplicationsList({ applications: initial }: { applications: Unif
       toolbar={toolbar}
       columns={columns}
       template={TEMPLATE}
-      minWidth="min-w-[960px]"
+      minWidth="min-w-[990px]"
       isEmpty={filtered.length === 0}
       empty={t('admin.applications.empty')}
     >

@@ -25,6 +25,9 @@ export type UnifiedApplication = {
   id_document_url: string | null
   admin_notes: string | null
   cleans_completed: number
+  // Shared admin "seen/unseen" worklist flag (migration 0024). See
+  // app/admin/seenItems.ts.
+  seen: boolean
 }
 
 export type CleanerApplicationResult = {

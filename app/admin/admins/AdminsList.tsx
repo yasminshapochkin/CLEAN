@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { createAdminInvite, revokeAdminInvite } from '@/app/admin/actions'
 import { StatusFilterDropdown, StatusPill } from '@/app/admin/adminTable'
+import { SearchInput } from '@/app/admin/SearchInput'
 
 export type AdminAccount = {
   id: string
@@ -55,11 +56,14 @@ export function AdminsList({
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'active' | 'inactive' | 'all'>('active')
+  const [search, setSearch] = useState('')
 
-  const filteredAdmins = useMemo(
-    () => (filter === 'all' ? admins : admins.filter((a) => a.userStatus === filter)),
-    [admins, filter],
-  )
+  const filteredAdmins = useMemo(() => {
+    const byStatus = filter === 'all' ? admins : admins.filter((a) => a.userStatus === filter)
+    const q = search.trim().toLowerCase()
+    if (!q) return byStatus
+    return byStatus.filter((a) => a.full_name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q))
+  }, [admins, filter, search])
   const filterOptions = [
     { value: 'active', label: t('admin.shared.filterActive') },
     { value: 'inactive', label: t('admin.shared.filterInactive') },
@@ -99,7 +103,8 @@ export function AdminsList({
     <div className="max-w-3xl mx-auto flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-bold text-gray-900">{t('admin.admins.title')}</h1>
-        <div className="ms-auto">
+        <div className="ms-auto flex flex-wrap items-center gap-2">
+          <SearchInput value={search} onChange={setSearch} />
           <StatusFilterDropdown value={filter} onChange={(v) => setFilter(v as typeof filter)} options={filterOptions} />
         </div>
       </div>

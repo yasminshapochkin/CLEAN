@@ -461,6 +461,10 @@ const translations = {
         filterBlocked: 'Blocked',
         filterAll: 'All',
         close: 'Close',
+        markSeen: 'Mark as seen',
+        markUnseen: 'Mark as unseen',
+        search: 'Search',
+        searchPlaceholder: 'Search by name, date, or location…',
       },
       dashboard: {
         greetingMorning: 'Good morning',
@@ -1116,6 +1120,10 @@ const translations = {
         filterBlocked: 'חסומים',
         filterAll: 'הכל',
         close: 'סגירה',
+        markSeen: 'סמן כנצפה',
+        markUnseen: 'בטל סימון כנצפה',
+        search: 'חיפוש',
+        searchPlaceholder: 'חיפוש לפי שם, תאריך או מיקום…',
       },
       dashboard: {
         greetingMorning: 'בוקר טוב',

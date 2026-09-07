@@ -41,4 +41,7 @@ export type BookingResult = {
   // passed. Computed fresh per request in app/admin/bookingsData.ts — never
   // stored, since there's no 'expired' value in the bookings.status enum.
   expired?: boolean
+  // Shared admin "seen/unseen" worklist flag (migration 0024). See
+  // app/admin/seenItems.ts. Optional because non-admin views never set it.
+  seen?: boolean
 }

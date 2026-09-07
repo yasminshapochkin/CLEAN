@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchSeenMap } from '@/app/admin/seenItems'
 import type { BookingResult, BookingStatus } from '@/lib/types/booking'
 
 // Shared by /admin/bookings ("Booking Requests" — pending/declined/cancelled)
@@ -21,11 +22,12 @@ export async function fetchBookingResults(statuses: BookingStatus[]): Promise<Bo
     ...(bookingRows ?? []).map(b => b.customer_id),
   ]))
 
-  const [{ data: profileRows }, authData] = await Promise.all([
+  const [{ data: profileRows }, authData, seenMap] = await Promise.all([
     allIds.length > 0
       ? admin.from('profiles').select('id, full_name, avatar_url, phone').in('id', allIds)
       : Promise.resolve({ data: [] }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
+    fetchSeenMap('booking', (bookingRows ?? []).map(b => b.id)),
   ])
 
   const profileMap = new Map((profileRows ?? []).map(p => [p.id, p]))
@@ -70,6 +72,7 @@ export async function fetchBookingResults(statuses: BookingStatus[]): Promise<Bo
       // transition on cleaner page loads once the 24h response_deadline
       // passes — this is admin-side visibility, not a second source of truth).
       expired: b.status === 'pending' && b.scheduled_date < todayStr,
+      seen: seenMap.get(b.id) ?? false,
     }
   })
 }

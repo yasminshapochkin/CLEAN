@@ -4,18 +4,35 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { AdminRow, NameCell, ServiceBadge, StatusPill, TextCell } from './adminTable'
 import { PersonCardModal } from './PersonCardModal'
 import { BookingDetailCard } from './BookingDetailCard'
+import { SeenCheckbox } from './SeenCheckbox'
 import type { BookingResult } from '@/lib/types/booking'
 
 // Shared by the Booking Requests and Matches lists — same row shape either
 // way, only the surrounding AdminTable (title/tabs/filtering) differs.
 // Kept tight enough that the row fits without horizontal scroll on a
 // typical admin viewport (same fix already applied to Applications/Cleaners).
+// Leading 28px track is the shared admin worklist "seen" checkbox (migration 0024).
 export const BOOKING_TEMPLATE =
-  'minmax(140px,1fr) minmax(140px,1fr) 88px minmax(110px,0.85fr) minmax(100px,0.75fr) 88px 76px'
+  '28px minmax(140px,1fr) minmax(140px,1fr) 88px minmax(110px,0.85fr) minmax(100px,0.75fr) 88px 76px'
 
 function formatDate(dateStr: string) {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+// Shared search predicate for both Booking Requests and Matches — matches on
+// either party's name, the address, or the date (raw YYYY-MM-DD or the
+// formatted display date, so "sep" or "2026-09" both work).
+export function bookingMatchesSearch(booking: BookingResult, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return (
+    booking.cleaner_name.toLowerCase().includes(q) ||
+    (booking.customer_name ?? '').toLowerCase().includes(q) ||
+    booking.address.toLowerCase().includes(q) ||
+    booking.scheduled_date.toLowerCase().includes(q) ||
+    formatDate(booking.scheduled_date).toLowerCase().includes(q)
+  )
 }
 
 type ModalState = 'cleaner' | 'customer' | 'detail' | null
@@ -25,6 +42,7 @@ export function BookingRow({ booking }: { booking: BookingResult }) {
   const [modal, setModal] = useState<ModalState>(null)
 
   const cells = [
+    <SeenCheckbox key="seen" entityType="booking" entityId={booking.id} initialSeen={booking.seen ?? false} />,
     <button key="cl" type="button" onClick={() => setModal('cleaner')} className="min-w-0 block text-start hover:opacity-80 transition-opacity">
       <NameCell name={booking.cleaner_name} url={booking.cleaner_avatar_url} />
     </button>,

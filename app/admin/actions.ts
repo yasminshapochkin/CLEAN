@@ -237,3 +237,33 @@ export async function resolveSupportMessage(id: string): Promise<ActionResult> {
   revalidatePath('/admin/support')
   return {}
 }
+
+// Shared "seen/unseen" toggle (migration 0024_admin_seen_items.sql) — a
+// single flag per item, not per-admin, since multiple admins work off one
+// shared worklist. Only ever set manually, from the checkbox on each row.
+export async function setSeenStatus(
+  entityType: 'cleaner_application' | 'customer_application' | 'booking' | 'support_message',
+  entityId: string,
+  seen: boolean,
+): Promise<ActionResult> {
+  const authError = await requireAdmin()
+  if (authError) return authError
+  const admin = createAdminClient()
+  const reviewer = await getCurrentUser()
+  const { error } = await admin.from('admin_seen_items').upsert(
+    {
+      entity_type: entityType,
+      entity_id: entityId,
+      seen,
+      seen_by: seen ? reviewer?.id ?? null : null,
+      seen_at: seen ? new Date().toISOString() : null,
+    },
+    { onConflict: 'entity_type,entity_id' },
+  )
+  if (error) return { error: error.message }
+  revalidatePath('/admin/applications')
+  revalidatePath('/admin/bookings')
+  revalidatePath('/admin/matches')
+  revalidatePath('/admin/support')
+  return {}
+}

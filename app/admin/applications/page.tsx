@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ApplicationsList } from './ApplicationsList'
+import { fetchSeenMap } from '@/app/admin/seenItems'
 import type { UnifiedApplication } from '@/lib/types/application'
 
 // Reads live admin data (listUsers); render on demand like the other admin pages.
@@ -24,6 +25,11 @@ export default async function ApplicationsPage() {
   const emailMap = new Map(authUsers.map(u => [u.id, u.email ?? '']))
   const createdAtMap = new Map(authUsers.map(u => [u.id, u.created_at]))
 
+  const [cleanerSeenMap, customerSeenMap] = await Promise.all([
+    fetchSeenMap('cleaner_application', (appRows ?? []).map(r => r.id)),
+    fetchSeenMap('customer_application', (customerRows ?? []).map(r => r.id)),
+  ])
+
   const cleanerApplications: (UnifiedApplication & { sortKey: string })[] = (appRows ?? []).map(row => {
     const cleaner = cleanerMap.get(row.cleaner_id)
     const profile = profileMap.get(row.cleaner_id)
@@ -43,6 +49,7 @@ export default async function ApplicationsPage() {
       id_document_url: row.id_document_url ?? null,
       admin_notes: row.admin_notes ?? null,
       cleans_completed: (cleaner as { cleans_completed?: number } | undefined)?.cleans_completed ?? 0,
+      seen: cleanerSeenMap.get(row.id) ?? false,
       sortKey: row.submitted_at ?? '',
     }
   })
@@ -66,6 +73,7 @@ export default async function ApplicationsPage() {
       id_document_url: null,
       admin_notes: row.admin_notes ?? null,
       cleans_completed: 0,
+      seen: customerSeenMap.get(row.id) ?? false,
       sortKey: createdAt ?? '',
     }
   })

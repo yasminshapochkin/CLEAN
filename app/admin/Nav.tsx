@@ -157,12 +157,14 @@ export function Nav({
   currentUserAvatarUrl,
   openDisputesCount = 0,
   unmatchedRequestsCount = 0,
+  matchesCount = 0,
   pendingApplicationsCount = 0,
 }: {
   currentUserName: string
   currentUserAvatarUrl?: string | null
   openDisputesCount?: number
   unmatchedRequestsCount?: number
+  matchesCount?: number
   pendingApplicationsCount?: number
 }) {
   const pathname = usePathname()
@@ -173,9 +175,12 @@ export function Nav({
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
+  // All four counts are "unseen" (shared admin worklist, migration 0024),
+  // not raw pending/unresolved totals — see admin/layout.tsx.
   const badgeCountFor = (href: string) => {
     if (href === '/admin/support') return openDisputesCount
     if (href === '/admin/bookings') return unmatchedRequestsCount
+    if (href === '/admin/matches') return matchesCount
     if (href === '/admin/applications') return pendingApplicationsCount
     return 0
   }

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchSeenMap } from '@/app/admin/seenItems'
 import { SupportList, type SupportMessage } from './SupportList'
 import { unstable_noStore as noStore } from 'next/cache'
 
@@ -15,9 +16,12 @@ export default async function AdminSupportPage() {
     .limit(500)
 
   const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)))
-  const { data: profileRows } = userIds.length
-    ? await admin.from('profiles').select('id, full_name, phone').in('id', userIds)
-    : { data: [] as { id: string; full_name: string | null; phone: string | null }[] }
+  const [{ data: profileRows }, seenMap] = await Promise.all([
+    userIds.length
+      ? admin.from('profiles').select('id, full_name, phone').in('id', userIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string | null; phone: string | null }[] }),
+    fetchSeenMap('support_message', (rows ?? []).map((r) => r.id)),
+  ])
 
   const profileMap = new Map((profileRows ?? []).map((p) => [p.id, p]))
 
@@ -31,6 +35,7 @@ export default async function AdminSupportPage() {
       message: r.message,
       resolved: r.resolved,
       createdAt: r.created_at,
+      seen: seenMap.get(r.id) ?? false,
     }
   })
 

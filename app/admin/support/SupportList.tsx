@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { resolveSupportMessage } from '../actions'
+import { SeenCheckbox } from '@/app/admin/SeenCheckbox'
+import { SearchInput } from '@/app/admin/SearchInput'
 
 export type SupportMessage = {
   id: string
@@ -12,6 +14,7 @@ export type SupportMessage = {
   message: string
   resolved: boolean
   createdAt: string
+  seen: boolean
 }
 
 export function SupportList({ messages }: { messages: SupportMessage[] }) {
@@ -19,8 +22,12 @@ export function SupportList({ messages }: { messages: SupportMessage[] }) {
   const [tab, setTab] = useState<'open' | 'resolved'>('open')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [, startResolve] = useTransition()
+  const [search, setSearch] = useState('')
 
-  const visible = messages.filter((m) => (tab === 'open' ? !m.resolved : m.resolved))
+  const q = search.trim().toLowerCase()
+  const visible = messages
+    .filter((m) => (tab === 'open' ? !m.resolved : m.resolved))
+    .filter((m) => !q || m.name.toLowerCase().includes(q) || m.message.toLowerCase().includes(q) || m.createdAt.toLowerCase().includes(q))
 
   function handleResolve(id: string) {
     setPendingId(id)
@@ -45,20 +52,23 @@ export function SupportList({ messages }: { messages: SupportMessage[] }) {
     <div className="mx-auto max-w-3xl">
       <h1 className="mb-4 text-2xl font-bold text-gray-900">{t('support.title')}</h1>
 
-      <div className="mb-4 flex gap-2">
-        {(['open', 'resolved'] as const).map((key) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors shadow-md ${
-              tab === key
-                ? 'bg-[#75C9C8] text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {key === 'open' ? t('support.openTab') : t('support.resolvedTab')}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2">
+          {(['open', 'resolved'] as const).map((key) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors shadow-md ${
+                tab === key
+                  ? 'bg-[#75C9C8] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {key === 'open' ? t('support.openTab') : t('support.resolvedTab')}
+            </button>
+          ))}
+        </div>
+        <SearchInput value={search} onChange={setSearch} />
       </div>
 
       {visible.length === 0 ? (
@@ -70,46 +80,51 @@ export function SupportList({ messages }: { messages: SupportMessage[] }) {
           {visible.map((m) => (
             <li
               key={m.id}
-              className="rounded-2xl bg-white p-4 shadow-xl ring-1 ring-gray-100"
+              className="flex items-start gap-3 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-gray-100"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 ">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">
-                    {m.name || t('support.from')}
-                  </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      m.userRole === 'cleaner'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-sky-100 text-sky-700'
-                    }`}
-                  >
-                    {roleLabel(m.userRole)}
-                  </span>
-                  {m.phone && (
-                    <a href={`tel:${m.phone}`} className="text-xs text-blue-600 hover:underline">
-                      {m.phone}
-                    </a>
-                  )}
-                </div>
-                <span className="text-xs text-gray-400">
-                  {dateFmt.format(new Date(m.createdAt))}
-                </span>
+              <div className="mt-0.5">
+                <SeenCheckbox entityType="support_message" entityId={m.id} initialSeen={m.seen} />
               </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-2 ">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {m.name || t('support.from')}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        m.userRole === 'cleaner'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-sky-100 text-sky-700'
+                      }`}
+                    >
+                      {roleLabel(m.userRole)}
+                    </span>
+                    {m.phone && (
+                      <a href={`tel:${m.phone}`} className="text-xs text-blue-600 hover:underline">
+                        {m.phone}
+                      </a>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {dateFmt.format(new Date(m.createdAt))}
+                  </span>
+                </div>
 
-              <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{m.message}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{m.message}</p>
 
-              {m.resolved ? (
-                <p className="mt-3 text-xs font-medium text-green-600">{t('support.resolved')}</p>
-              ) : (
-                <button
-                  onClick={() => handleResolve(m.id)}
-                  disabled={pendingId === m.id}
-                  className="mt-3 rounded-full bg-[#DED9E2] px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-[#C0B9DD] disabled:opacity-60"
-                >
-                  {t('support.resolve')}
-                </button>
-              )}
+                {m.resolved ? (
+                  <p className="mt-3 text-xs font-medium text-green-600">{t('support.resolved')}</p>
+                ) : (
+                  <button
+                    onClick={() => handleResolve(m.id)}
+                    disabled={pendingId === m.id}
+                    className="mt-3 rounded-full bg-[#DED9E2] px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-[#C0B9DD] disabled:opacity-60"
+                  >
+                    {t('support.resolve')}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

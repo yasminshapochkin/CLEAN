@@ -15,6 +15,7 @@ import {
   StatusPill,
   ContactIconStack,
 } from '@/app/admin/adminTable'
+import { SearchInput } from '@/app/admin/SearchInput'
 import type { CleanerResult } from '@/lib/types/cleaner'
 import type { UserStatus } from '@/lib/adminUserStatus'
 
@@ -113,6 +114,7 @@ export function CleanersList({ cleaners: initial }: { cleaners: CleanerWithNotes
   const { t } = useLanguage()
   const [cleaners, setCleaners] = useState(initial)
   const [filter, setFilter] = useState<'active' | 'inactive' | 'blocked' | 'all'>('active')
+  const [search, setSearch] = useState('')
 
   async function handleDelete(id: string) {
     await deleteCleanerAdmin(id)
@@ -123,10 +125,14 @@ export function CleanersList({ cleaners: initial }: { cleaners: CleanerWithNotes
     setCleaners(prev => prev.map(c => (c.id === id ? { ...c, adminNotes: notes } : c)))
   }
 
-  const filtered = useMemo(
-    () => (filter === 'all' ? cleaners : cleaners.filter(c => c.userStatus === filter)),
-    [cleaners, filter],
-  )
+  const filtered = useMemo(() => {
+    const byStatus = filter === 'all' ? cleaners : cleaners.filter(c => c.userStatus === filter)
+    const q = search.trim().toLowerCase()
+    if (!q) return byStatus
+    return byStatus.filter(
+      c => c.full_name.toLowerCase().includes(q) || (c.area ?? '').toLowerCase().includes(q) || (c.joinedAt ?? '').toLowerCase().includes(q),
+    )
+  }, [cleaners, filter, search])
 
   const columns = [
     { key: 'name', label: t('admin.shared.name') },
@@ -149,7 +155,12 @@ export function CleanersList({ cleaners: initial }: { cleaners: CleanerWithNotes
     <AdminTable
       title={t('admin.cleaners.title')}
       count={filtered.length}
-      toolbar={<StatusFilterDropdown value={filter} onChange={(v) => setFilter(v as typeof filter)} options={filterOptions} />}
+      toolbar={
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput value={search} onChange={setSearch} />
+          <StatusFilterDropdown value={filter} onChange={(v) => setFilter(v as typeof filter)} options={filterOptions} />
+        </div>
+      }
       columns={columns}
       template={TEMPLATE}
       minWidth="min-w-[940px]"
