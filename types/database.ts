@@ -23,6 +23,9 @@ export type PetType = "dog" | "cat" | "other";
 export type UsageFrequency = "weekly" | "twice_monthly" | "occasional" | "one_time";
 export type UsualCleaningType = "regular" | "deep";
 export type CleaningPriority = "kitchen" | "bathrooms" | "floors" | "dusting" | "windows" | "linens" | "laundry" | "outdoor" | "other";
+// Mirrors CleanerStatus's pending/approved/rejected (no 'suspended' — a
+// blocked customer is hard-deleted, see blocked_users). See migration 0023.
+export type CustomerStatus = "pending" | "approved" | "rejected";
 
 export interface Customer {
   id: string;
@@ -69,6 +72,13 @@ export interface Customer {
   cleaning_priorities: CleaningPriority[];
   cleaning_priorities_other: string | null;
   home_instructions: string | null;
+  // Free-text note about the customer's pets, collected in the wizard's
+  // household step. See migration 0026.
+  pet_note: string | null;
+  // Admin approval gate — see migration 0023. Not present on rows created
+  // before it (grandfathered to 'approved' by that migration's backfill).
+  status: CustomerStatus;
+  status_reviewed_at: string | null;
 }
 
 export interface Cleaner {

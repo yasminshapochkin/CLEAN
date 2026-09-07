@@ -261,6 +261,7 @@ export default function CustomerRegisterPage() {
       num_people: answers.numPeople ? Number(answers.numPeople) : null,
       pet_types: answers.petTypes,
       num_pets: answers.petTypes.length > 0 && answers.numPets ? Number(answers.numPets) : null,
+      pet_note: answers.petTypes.length > 0 && answers.petNote ? answers.petNote.trim() || null : null,
       usage_frequency: answers.frequency,
       usual_cleaning_type: answers.cleaningType,
       cleaning_priorities: answers.priorities,

@@ -15,6 +15,47 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
+const DWELLING_LABELS: Record<string, string> = {
+  apartment: "Apartment",
+  house: "House",
+  guesthouse: "Guesthouse",
+  other: "Other",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  kitchen: "Kitchen",
+  bathrooms: "Bathrooms",
+  floors: "Floors",
+  dusting: "Dusting",
+  windows: "Windows",
+  linens: "Linens",
+  laundry: "Laundry",
+  outdoor: "Outdoor",
+};
+
+const CLEANING_TYPE_LABELS: Record<string, string> = {
+  regular: "Regular clean",
+  deep: "Deep clean",
+};
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  weekly: "Weekly",
+  twice_monthly: "Twice a month",
+  occasional: "Occasionally",
+  one_time: "One-time",
+};
+
+// A small placeholder for sections whose feature isn't built yet — kept
+// visually consistent with the mockup ("keep the space blank and write
+// coming soon") rather than just omitting the section.
+function ComingSoon({ label }: { label: string }) {
+  return (
+    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-4 text-center text-sm text-gray-400">
+      {label} coming soon
+    </div>
+  );
+}
+
 export default async function CustomerProfilePage({
   params,
   searchParams,
@@ -56,30 +97,35 @@ export default async function CustomerProfilePage({
 
   if (!profile || !bookings || bookings.length === 0) notFound();
 
-  // Build the household summary, skipping anything the customer left blank.
-  const petLabel =
-    customer && customer.pet_types?.length
-      ? customer.pet_types.map((p) => (p === "dog" ? "Dog" : p === "cat" ? "Cat" : "Other")).join(" & ") +
-        (customer.num_pets ? ` (${customer.num_pets})` : "")
-      : null;
-  const household: { label: string; value: string }[] = customer
+  const isVerified = customer?.status === "approved";
+
+  // "The home" — merges the older num_rooms/floor fields (still edited from
+  // /profile) with the newer bedrooms/bathrooms/num_floors fields (from the
+  // host onboarding wizard) since a given customer may only have one set.
+  const homeFields: { label: string; value: string }[] = customer
     ? [
+        { label: "Type", value: customer.dwelling_type ? DWELLING_LABELS[customer.dwelling_type] ?? customer.dwelling_type : "" },
         {
-          label: "Property",
-          value:
-            customer.dwelling_type === "apartment"
-              ? `Apartment${customer.floor != null ? `, floor ${customer.floor}` : ""}`
-              : customer.dwelling_type === "house"
-              ? "House"
-              : "",
+          label: customer.bedrooms != null ? "Bedrooms" : "Rooms",
+          value: customer.bedrooms != null ? String(customer.bedrooms) : customer.num_rooms != null ? String(customer.num_rooms) : "",
         },
-        { label: "Rooms", value: customer.num_rooms != null ? String(customer.num_rooms) : "" },
-        { label: "Est. size", value: customer.house_size_sqm != null ? `${customer.house_size_sqm} m²` : "" },
+        { label: "Bathrooms", value: customer.bathrooms != null ? String(customer.bathrooms) : "" },
+        { label: "Floor", value: customer.floor != null ? String(customer.floor) : "" },
+        { label: "Floors", value: customer.num_floors != null ? String(customer.num_floors) : "" },
+        { label: "Size", value: customer.house_size_sqm != null ? `${customer.house_size_sqm} m²` : "" },
         { label: "People", value: customer.num_people != null ? String(customer.num_people) : "" },
         { label: "Kids under 15", value: customer.num_kids_under_15 != null ? String(customer.num_kids_under_15) : "" },
-        { label: "Pets", value: petLabel ?? "" },
       ].filter((f) => f.value !== "")
     : [];
+
+  const hasPets = (customer?.pet_types?.length ?? 0) > 0;
+  const petTypesLabel = customer?.pet_types
+    ?.map((p) => (p === "dog" ? "Dog" : p === "cat" ? "Cat" : "Other"))
+    .join(" & ");
+
+  const priorityBubbles = (customer?.cleaning_priorities ?? []).map((p) =>
+    p === "other" ? customer?.cleaning_priorities_other || "Other" : PRIORITY_LABELS[p] ?? p
+  );
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -100,37 +146,44 @@ export default async function CustomerProfilePage({
             ) : null}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{profile.full_name ?? "Customer"}</h1>
-            <StarRatingDisplay
-              value={customer?.rating_avg}
-              count={customer?.rating_count}
-              size="sm"
-              emptyLabel="No ratings yet"
-              className="mt-1"
-            />
-            {(customer?.cleans_completed ?? 0) > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                {customer?.cleans_completed} {customer?.cleans_completed === 1 ? "clean" : "cleans"} completed
-              </p>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-900">{profile.full_name ?? "Customer"}</h1>
+              {isVerified && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                  ✓ Verified host
+                </span>
+              )}
+            </div>
+            {customer?.address && <p className="text-sm text-gray-500 mt-0.5">{customer.address}</p>}
+            <div className="flex items-center gap-3 mt-1.5">
+              <StarRatingDisplay
+                value={customer?.rating_avg}
+                count={customer?.rating_count}
+                size="sm"
+                emptyLabel="No ratings yet"
+              />
+              {(customer?.cleans_completed ?? 0) > 0 && (
+                <p className="text-sm text-gray-500">
+                  {customer?.cleans_completed} {customer?.cleans_completed === 1 ? "clean" : "cleans"} completed
+                </p>
+              )}
+            </div>
           </div>
         </div>
         {customer?.bio && (
-          <div className="mt-4 pt-4">
-            <p className="text-gray-400 uppercase tracking-wide text-xs mb-1">About</p>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-gray-400 uppercase tracking-wide text-xs mb-1">About me</p>
             <p className="text-base text-gray-700 whitespace-pre-line">{customer.bio}</p>
           </div>
         )}
       </div>
 
-      {/* Household details */}
-      {household.length > 0 && (
+      {/* The home */}
+      {homeFields.length > 0 && (
         <>
-          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Household details
-          </h2>
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">The home</h2>
           <div className="bg-white rounded-2xl shadow-md p-6 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {household.map((f) => (
+            {homeFields.map((f) => (
               <div key={f.label}>
                 <p className="text-gray-400 uppercase tracking-wide text-xs mb-0.5">{f.label}</p>
                 <p className="text-base font-semibold text-gray-900">{f.value}</p>
@@ -139,6 +192,77 @@ export default async function CustomerProfilePage({
           </div>
         </>
       )}
+
+      {/* Pets */}
+      {hasPets && (
+        <>
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Pets</h2>
+          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-xs text-gray-400 text-center shrink-0 leading-tight">
+                <span>Photo</span>
+                <span>coming soon</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-gray-900">
+                  {petTypesLabel}
+                  {customer?.num_pets ? ` (${customer.num_pets})` : ""}
+                </p>
+                {customer?.pet_note && (
+                  <p className="text-sm text-gray-600 italic mt-1">&ldquo;{customer.pet_note}&rdquo;</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Usually clean */}
+      {(priorityBubbles.length > 0 || customer?.usual_cleaning_type || customer?.usage_frequency) && (
+        <>
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Usually clean</h2>
+          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+            {(customer?.usual_cleaning_type || customer?.usage_frequency) && (
+              <p className="text-sm text-gray-600 mb-3">
+                {[
+                  customer?.usual_cleaning_type ? CLEANING_TYPE_LABELS[customer.usual_cleaning_type] : null,
+                  customer?.usage_frequency ? FREQUENCY_LABELS[customer.usage_frequency] : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+            {priorityBubbles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {priorityBubbles.map((label) => (
+                  <span
+                    key={label}
+                    className="text-sm px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Home notes */}
+      {customer?.home_instructions && (
+        <>
+          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Home notes</h2>
+          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+            <p className="text-sm text-gray-600 italic whitespace-pre-line">&ldquo;{customer.home_instructions}&rdquo;</p>
+          </div>
+        </>
+      )}
+
+      {/* Reviews from cleaners */}
+      <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Reviews from cleaners</h2>
+      <div className="mb-6">
+        <ComingSoon label="Reviews" />
+      </div>
 
       {/* Booking history */}
       <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
