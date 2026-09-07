@@ -111,7 +111,9 @@ export async function updateCustomerProfile(
       bio,
       address,
       preferred_service_type: preferredServiceType || null,
-      max_hours: toInt(formData.get("max_hours")),
+      // max_hours is intentionally omitted: no longer customer-editable, and
+      // omitting it from the upsert preserves any value already stored
+      // (mirrors the num_kids_under_15/num_people pattern below).
       lat: location?.lat ?? null,
       lng: location?.lng ?? null,
       num_rooms: toInt(formData.get("num_rooms")),
