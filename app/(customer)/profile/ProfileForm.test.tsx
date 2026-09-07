@@ -18,6 +18,7 @@ const baseProfile = {
   num_rooms: '',
   pet_types: [] as ('dog' | 'cat')[],
   num_pets: '',
+  pet_photo_url: null as string | null,
   num_kids_under_15: '',
   num_people: '',
   house_size_sqm: '',

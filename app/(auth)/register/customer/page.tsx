@@ -31,6 +31,8 @@ type Answers = {
   petTypes: string[];
   numPets: string;
   petNote: string;
+  petPhotoFile: File | null;
+  petPhotoPreview: string | null;
   frequency: Frequency | null;
   cleaningType: CleaningType | null;
   priorities: string[];
@@ -93,6 +95,8 @@ const initialAnswers: Answers = {
   petTypes: [],
   numPets: "",
   petNote: "",
+  petPhotoFile: null,
+  petPhotoPreview: null,
   frequency: null,
   cleaningType: null,
   priorities: [],
@@ -114,6 +118,7 @@ export default function CustomerRegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const petPhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("pending_signup");
@@ -162,6 +167,13 @@ export default function CustomerRegisterPage() {
     if (!file) return;
     const normalized = await normalizeImageToJpeg(file);
     setAnswers((a) => ({ ...a, photoFile: normalized, photoPreview: URL.createObjectURL(normalized) }));
+  }
+
+  async function onPetPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const normalized = await normalizeImageToJpeg(file);
+    setAnswers((a) => ({ ...a, petPhotoFile: normalized, petPhotoPreview: URL.createObjectURL(normalized) }));
   }
 
   function togglePetType(value: string) {
@@ -217,6 +229,19 @@ export default function CustomerRegisterPage() {
       }
     }
 
+    let petPhotoUrl: string | undefined;
+    if (answers.petPhotoFile) {
+      const ext = answers.petPhotoFile.name.split(".").pop();
+      const path = `${user.id}/pet.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, answers.petPhotoFile, { upsert: true, contentType: answers.petPhotoFile.type });
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        petPhotoUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+      }
+    }
+
     // full_name keeps being written as "first last" so every existing reader
     // of profiles.full_name (bookings, admin lists, the cleaner's view of a
     // customer, ...) is unaffected — first_name/last_name on customers below
@@ -262,6 +287,7 @@ export default function CustomerRegisterPage() {
       pet_types: answers.petTypes,
       num_pets: answers.petTypes.length > 0 && answers.numPets ? Number(answers.numPets) : null,
       pet_note: answers.petTypes.length > 0 && answers.petNote ? answers.petNote.trim() || null : null,
+      ...(petPhotoUrl && { pet_photo_url: petPhotoUrl }),
       usage_frequency: answers.frequency,
       usual_cleaning_type: answers.cleaningType,
       cleaning_priorities: answers.priorities,
@@ -557,7 +583,7 @@ export default function CustomerRegisterPage() {
                     <div className="flex gap-1.5 flex-wrap">
                       <button
                         type="button"
-                        onClick={() => setAnswers((a) => ({ ...a, petTypes: [], numPets: "", petNote: "" }))}
+                        onClick={() => setAnswers((a) => ({ ...a, petTypes: [], numPets: "", petNote: "", petPhotoFile: null, petPhotoPreview: null }))}
                         className={`px-3 py-1.5 rounded-full border text-sm ${
                           answers.petTypes.length === 0 ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-300 bg-white text-gray-700"
                         }`}
@@ -602,6 +628,22 @@ export default function CustomerRegisterPage() {
                           placeholder={t("auth.registerCustomer.petNotePlaceholder")}
                           className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-2">{t("auth.registerCustomer.qPetPhoto")}</p>
+                        <button
+                          type="button"
+                          onClick={() => petPhotoInputRef.current?.click()}
+                          className="w-16 h-16 rounded-xl border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center"
+                        >
+                          {answers.petPhotoPreview ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={answers.petPhotoPreview} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl">🐾</span>
+                          )}
+                        </button>
+                        <input ref={petPhotoInputRef} type="file" accept="image/*" className="hidden" onChange={onPetPhotoChange} />
                       </div>
                     </>
                   )}

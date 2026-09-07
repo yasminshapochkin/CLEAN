@@ -233,6 +233,7 @@ const translations = {
       cat: 'Cat',
       other: 'Other',
       totalPets: 'Total pets',
+      petPhoto: 'Pet photo',
       saved: 'Profile saved!',
       save: 'Save',
       saving: 'Saving…',
@@ -620,6 +621,7 @@ const translations = {
         qNumPets: 'Number of pets',
         qPetNote: 'Anything the cleaner should know about your pets?',
         petNotePlaceholder: 'e.g. friendly but shy around new people',
+        qPetPhoto: 'Add a photo of your pet (optional)',
 
         // Step 4 — Cleaning Preferences
         qFrequency: 'How often are you planning to use this service?',
@@ -977,6 +979,7 @@ const translations = {
       cat: 'חתול',
       other: 'אחר',
       totalPets: 'סך חיות המחמד',
+      petPhoto: 'תמונת חיית המחמד',
       saved: 'הפרופיל נשמר!',
       save: 'שמירה',
       saving: 'שומר…',
@@ -1361,6 +1364,7 @@ const translations = {
         qNumPets: 'מספר חיות המחמד',
         qPetNote: 'משהו שכדאי שהמנקה ידע/תדע על חיות המחמד שלכם?',
         petNotePlaceholder: 'לדוגמה: ידידותי אך ביישן מול אנשים חדשים',
+        qPetPhoto: 'הוסיפו תמונה של חיית המחמד שלכם (לא חובה)',
 
         qFrequency: 'באיזו תדירות אתם מתכננים להשתמש בשירות?',
         freqWeekly: 'פעם בשבוע',

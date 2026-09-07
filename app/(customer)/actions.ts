@@ -19,7 +19,7 @@ export async function markBookingsSeen(): Promise<void> {
   revalidatePath("/bookings")
 }
 
-type ActionResult = { error?: string; success?: boolean; avatarUrl?: string } | null
+type ActionResult = { error?: string; success?: boolean; avatarUrl?: string; petPhotoUrl?: string } | null
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.slice(0, 5).split(':').map(Number)
@@ -96,6 +96,22 @@ export async function updateCustomerProfile(
     avatarUrl = `${urlData.publicUrl}?v=${Date.now()}`
   }
 
+  // Handle pet photo upload — same bucket/path pattern as the avatar, just a
+  // different filename within the user's own folder (no new storage policy
+  // needed). See migration 0027.
+  const petPhotoFile = formData.get("pet_photo") as File
+  let petPhotoUrl: string | undefined
+  if (petPhotoFile && petPhotoFile.size > 0) {
+    const ext = petPhotoFile.name.split(".").pop()
+    const path = `${user.id}/pet.${ext}`
+    const { error: uploadErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, petPhotoFile, { upsert: true, contentType: petPhotoFile.type })
+    if (uploadErr) return { error: uploadErr.message }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+    petPhotoUrl = `${urlData.publicUrl}?v=${Date.now()}`
+  }
+
   const { error: profileErr } = await supabase
     .from("profiles")
     .update({ full_name: fullName, phone, ...(avatarUrl && { avatar_url: avatarUrl }) })
@@ -119,6 +135,9 @@ export async function updateCustomerProfile(
       num_rooms: toInt(formData.get("num_rooms")),
       pet_types: petTypes,
       num_pets: numPets,
+      // Omit the key entirely when no new file was uploaded, so an existing
+      // photo isn't wiped out on every unrelated profile save.
+      ...(petPhotoUrl && { pet_photo_url: petPhotoUrl }),
       // num_kids_under_15 / num_people are intentionally omitted: the customer can
       // no longer edit them, and omitting them from the upsert preserves any value
       // already stored (the columns remain in the DB and on the cleaner's view).
@@ -129,7 +148,7 @@ export async function updateCustomerProfile(
   if (customerErr) return { error: customerErr.message }
 
   revalidatePath("/profile")
-  return { success: true, avatarUrl: avatarUrl ?? undefined }
+  return { success: true, avatarUrl: avatarUrl ?? undefined, petPhotoUrl: petPhotoUrl ?? undefined }
 }
 
 export async function createBooking(data: {

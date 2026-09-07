@@ -10,7 +10,7 @@ export default async function ProfilePage() {
 
   const [{ data: profile }, { data: customer }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, avatar_url").eq("id", user.id).single(),
-    supabase.from("customers").select("bio, address, preferred_service_type, num_rooms, pet_types, num_pets, num_kids_under_15, num_people, house_size_sqm, dwelling_type, floor").eq("id", user.id).single(),
+    supabase.from("customers").select("bio, address, preferred_service_type, num_rooms, pet_types, num_pets, pet_photo_url, num_kids_under_15, num_people, house_size_sqm, dwelling_type, floor").eq("id", user.id).single(),
   ])
 
   const numOrEmpty = (n: number | null | undefined) => (n == null ? "" : String(n))
@@ -29,6 +29,7 @@ export default async function ProfilePage() {
           num_rooms: numOrEmpty(customer?.num_rooms),
           pet_types: (customer?.pet_types as ('dog' | 'cat' | 'other')[]) ?? [],
           num_pets: numOrEmpty(customer?.num_pets),
+          pet_photo_url: customer?.pet_photo_url ?? null,
           num_kids_under_15: numOrEmpty(customer?.num_kids_under_15),
           num_people: numOrEmpty(customer?.num_people),
           house_size_sqm: numOrEmpty(customer?.house_size_sqm),

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { normalizeImageToJpeg } from '@/lib/image/normalizeImage'
 
-type ActionResult = { error?: string; success?: boolean; avatarUrl?: string } | null
+type ActionResult = { error?: string; success?: boolean; avatarUrl?: string; petPhotoUrl?: string } | null
 
 type DefaultValues = {
   full_name: string
@@ -17,6 +17,7 @@ type DefaultValues = {
   num_rooms: string
   pet_types: ('dog' | 'cat' | 'other')[]
   num_pets: string
+  pet_photo_url: string | null
   num_kids_under_15: string
   num_people: string
   house_size_sqm: string
@@ -49,6 +50,8 @@ export function ProfileForm({ defaultValues, action }: Props) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(defaultValues.avatar_url)
+  const petPhotoInputRef = useRef<HTMLInputElement>(null)
+  const [petPhotoPreview, setPetPhotoPreview] = useState<string | null>(defaultValues.pet_photo_url)
   // Pets toggle drives whether the dog/cat + count fields show; dwelling type
   // drives whether the floor field shows (only meaningful for apartments).
   const [hasPets, setHasPets] = useState(defaultValues.pet_types.length > 0)
@@ -69,6 +72,7 @@ export function ProfileForm({ defaultValues, action }: Props) {
   useEffect(() => {
     if (state?.success) {
       if (state.avatarUrl) setPreview(state.avatarUrl)
+      if (state.petPhotoUrl) setPetPhotoPreview(state.petPhotoUrl)
       router.refresh()
     }
   }, [state, router])
@@ -91,6 +95,19 @@ export function ProfileForm({ defaultValues, action }: Props) {
       input.files = dt.files
     }
     setPreview(URL.createObjectURL(normalized))
+  }
+
+  async function handlePetPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.target
+    const file = input.files?.[0]
+    if (!file) return
+    const normalized = await normalizeImageToJpeg(file)
+    if (normalized !== file) {
+      const dt = new DataTransfer()
+      dt.items.add(normalized)
+      input.files = dt.files
+    }
+    setPetPhotoPreview(URL.createObjectURL(normalized))
   }
 
   return (
@@ -281,6 +298,30 @@ export function ProfileForm({ defaultValues, action }: Props) {
                 <label htmlFor="num_pets" className={labelClass}>{t('profile.totalPets')}</label>
                 <input id="num_pets" name="num_pets" type="number" inputMode="numeric"
                   min={minPets} required defaultValue={defaultValues.num_pets} className={`${fieldClass} w-28`} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className={labelClass}>{t('profile.petPhoto')}</span>
+                <button
+                  type="button"
+                  onClick={() => petPhotoInputRef.current?.click()}
+                  className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-300 overflow-hidden flex items-center justify-center text-gray-400 hover:border-gray-400"
+                  title={t('profile.petPhoto')}
+                >
+                  {petPhotoPreview ? (
+                    <img src={petPhotoPreview} alt="Pet" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">🐾</span>
+                  )}
+                </button>
+                <input
+                  ref={petPhotoInputRef}
+                  type="file"
+                  name="pet_photo"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePetPhotoChange}
+                />
               </div>
             </div>
           )}

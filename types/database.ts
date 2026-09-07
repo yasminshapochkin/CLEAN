@@ -75,6 +75,9 @@ export interface Customer {
   // Free-text note about the customer's pets, collected in the wizard's
   // household step. See migration 0026.
   pet_note: string | null;
+  // Photo of the customer's pet(s), uploaded to the `avatars` bucket at
+  // {user_id}/pet.{ext}. See migration 0027.
+  pet_photo_url: string | null;
   // Admin approval gate — see migration 0023. Not present on rows created
   // before it (grandfathered to 'approved' by that migration's backfill).
   status: CustomerStatus;

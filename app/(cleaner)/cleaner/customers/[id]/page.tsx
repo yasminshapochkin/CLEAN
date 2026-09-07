@@ -199,10 +199,21 @@ export default async function CustomerProfilePage({
           <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Pets</h2>
           <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-xs text-gray-400 text-center shrink-0 leading-tight">
-                <span>Photo</span>
-                <span>coming soon</span>
-              </div>
+              {customer?.pet_photo_url ? (
+                <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                  <Image
+                    src={customer.pet_photo_url}
+                    alt="Pet"
+                    width={64}
+                    height={64}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-2xl shrink-0">
+                  🐾
+                </div>
+              )}
               <div className="min-w-0">
                 <p className="text-base font-semibold text-gray-900">
                   {petTypesLabel}
