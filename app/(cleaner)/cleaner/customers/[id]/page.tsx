@@ -6,7 +6,7 @@ import type { Profile, Booking, Customer } from "@/types/database";
 import BackLink from "./BackLink";
 import DateCube from "./DateCube";
 import ReviewsList, { type ReviewItem } from "./ReviewsList";
-import { StarRatingDisplay } from "@/components/StarRating";
+import { HouseIcon, PinIcon, StarIcon, PawIcon, SparkleIcon, DocIcon, CheckIcon, HOME_FIELD_ICONS } from "./Icons";
 
 const STATUS_STYLES: Record<string, string> = {
   pending:   "bg-yellow-100 text-yellow-700",
@@ -34,17 +34,9 @@ const PRIORITY_LABELS: Record<string, string> = {
   outdoor: "Outdoor",
 };
 
-const CLEANING_TYPE_LABELS: Record<string, string> = {
-  regular: "Regular clean",
-  deep: "Deep clean",
-};
-
-const FREQUENCY_LABELS: Record<string, string> = {
-  weekly: "Weekly",
-  twice_monthly: "Twice a month",
-  occasional: "Occasionally",
-  one_time: "One-time",
-};
+// Shared card look (cream, matching the mockup) for every profile section.
+const CARD = "bg-[#F7F4EA] rounded-2xl shadow-sm p-6";
+const SECTION_TITLE = "font-serif font-bold text-lg text-emerald-950";
 
 export default async function CustomerProfilePage({
   params,
@@ -100,30 +92,41 @@ export default async function CustomerProfilePage({
   if (!profile || !bookings || bookings.length === 0) notFound();
 
   const isVerified = customer?.status === "approved";
+  const ratingCount = customer?.rating_count ?? 0;
+  const ratingAvg = customer?.rating_avg != null ? Number(customer.rating_avg) : null;
+  const cleansCompleted = customer?.cleans_completed ?? 0;
+
+  const dwellingLabel = customer?.dwelling_type
+    ? DWELLING_LABELS[customer.dwelling_type] ?? customer.dwelling_type
+    : null;
+  const homeTypeLine = [dwellingLabel, customer?.address].filter(Boolean).join(" · ");
 
   // "The home" — merges the older num_rooms/floor fields (still edited from
   // /profile) with the newer bedrooms/bathrooms/num_floors fields (from the
   // host onboarding wizard) since a given customer may only have one set.
-  const homeFields: { label: string; value: string }[] = customer
+  // Each row's `text` is the fully formatted display string; `icon` keys into
+  // HOME_FIELD_ICONS.
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const bedrooms = customer?.bedrooms ?? customer?.num_rooms ?? null;
+  const homeFields: { icon: string; text: string }[] = customer
     ? [
-        { label: "Type", value: customer.dwelling_type ? DWELLING_LABELS[customer.dwelling_type] ?? customer.dwelling_type : "" },
-        {
-          label: customer.bedrooms != null ? "Bedrooms" : "Rooms",
-          value: customer.bedrooms != null ? String(customer.bedrooms) : customer.num_rooms != null ? String(customer.num_rooms) : "",
-        },
-        { label: "Bathrooms", value: customer.bathrooms != null ? String(customer.bathrooms) : "" },
-        { label: "Floor", value: customer.floor != null ? String(customer.floor) : "" },
-        { label: "Floors", value: customer.num_floors != null ? String(customer.num_floors) : "" },
-        { label: "Size", value: customer.house_size_sqm != null ? `${customer.house_size_sqm} m²` : "" },
-        { label: "People", value: customer.num_people != null ? String(customer.num_people) : "" },
-        { label: "Kids under 15", value: customer.num_kids_under_15 != null ? String(customer.num_kids_under_15) : "" },
-      ].filter((f) => f.value !== "")
+        bedrooms != null ? { icon: "Bedrooms", text: plural(bedrooms, customer.bedrooms != null ? "bedroom" : "room") } : null,
+        customer.bathrooms != null ? { icon: "Bathrooms", text: plural(customer.bathrooms, "bathroom") } : null,
+        customer.floor != null ? { icon: "Floor", text: `Floor ${customer.floor}` } : null,
+        customer.num_floors != null ? { icon: "Floors", text: plural(customer.num_floors, "floor") } : null,
+        customer.house_size_sqm != null ? { icon: "Size", text: `~${customer.house_size_sqm} m²` } : null,
+        customer.num_people != null
+          ? { icon: "People", text: customer.num_people === 1 ? "1 person lives here" : `${customer.num_people} people live here` }
+          : null,
+        customer.num_kids_under_15 != null ? { icon: "Kids under 15", text: `${plural(customer.num_kids_under_15, "kid")} under 15` } : null,
+      ].filter((f): f is { icon: string; text: string } => f !== null)
     : [];
 
   const hasPets = (customer?.pet_types?.length ?? 0) > 0;
-  const petTypesLabel = customer?.pet_types
-    ?.map((p) => (p === "dog" ? "Dog" : p === "cat" ? "Cat" : "Other"))
+  const petCountLabel = customer?.pet_types
+    ?.map((p) => (p === "dog" ? "dog" : p === "cat" ? "cat" : "pet"))
     .join(" & ");
+  const petLine = customer?.num_pets ? `${customer.num_pets} ${petCountLabel}` : petCountLabel;
 
   const priorityBubbles = (customer?.cleaning_priorities ?? []).map((p) =>
     p === "other" ? customer?.cleaning_priorities_other || "Other" : PRIORITY_LABELS[p] ?? p
@@ -134,154 +137,181 @@ export default async function CustomerProfilePage({
     score: r.score,
     reviewText: r.review_text,
     reviewerName: r.rater?.full_name ?? "A cleaner",
-    date: new Date(r.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
   }));
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto flex flex-col gap-4">
       <BackLink fromDashboard={fromDashboard} />
 
       {/* Profile header */}
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-        <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden shrink-0">
+      <div className={CARD}>
+        <div className="flex items-start gap-5">
+          <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden shrink-0">
             {profile.avatar_url ? (
               <Image
                 src={profile.avatar_url}
                 alt={profile.full_name ?? "Customer"}
-                width={80}
-                height={80}
+                width={96}
+                height={96}
                 className="object-cover w-full h-full"
               />
             ) : null}
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-gray-900">{profile.full_name ?? "Customer"}</h1>
-              {isVerified && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                  ✓ Verified host
-                </span>
-              )}
-            </div>
-            {customer?.address && <p className="text-sm text-gray-500 mt-0.5">{customer.address}</p>}
-            <div className="flex items-center gap-3 mt-1.5">
-              <StarRatingDisplay
-                value={customer?.rating_avg}
-                count={customer?.rating_count}
-                size="sm"
-                emptyLabel="No ratings yet"
-              />
-              {(customer?.cleans_completed ?? 0) > 0 && (
-                <p className="text-sm text-gray-500">
-                  {customer?.cleans_completed} {customer?.cleans_completed === 1 ? "clean" : "cleans"} completed
-                </p>
+          <div className="min-w-0">
+            <h1 className="font-serif text-3xl font-bold text-emerald-950">{profile.full_name ?? "Customer"}</h1>
+            {isVerified && (
+              <span className="inline-flex items-center gap-1.5 mt-2 text-sm font-medium px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                <CheckIcon className="w-3.5 h-3.5" /> Verified host
+              </span>
+            )}
+            {customer?.address && (
+              <p className="flex items-center gap-1.5 text-emerald-800 mt-2 text-sm">
+                <PinIcon className="w-4 h-4 shrink-0" /> {customer.address}
+              </p>
+            )}
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2">
+                <StarIcon className="w-6 h-6 text-amber-400" />
+                <div className="leading-tight">
+                  <p className="font-bold text-lg text-emerald-950">{ratingAvg != null ? ratingAvg.toFixed(1) : "—"}</p>
+                  <p className="text-xs text-gray-500">Host rating</p>
+                </div>
+              </div>
+              {cleansCompleted > 0 && (
+                <>
+                  <div className="w-px h-8 bg-emerald-900/10" />
+                  <div className="flex items-center gap-2">
+                    <HouseIcon className="w-6 h-6 text-emerald-700" />
+                    <div className="leading-tight">
+                      <p className="font-bold text-lg text-emerald-950">{cleansCompleted}</p>
+                      <p className="text-xs text-gray-500">Cleans completed</p>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
-        {customer?.bio && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-gray-400 uppercase tracking-wide text-xs mb-1">About me</p>
-            <p className="text-base text-gray-700 whitespace-pre-line">{customer.bio}</p>
-          </div>
-        )}
       </div>
 
-      {/* The home */}
-      {homeFields.length > 0 && (
-        <>
-          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">The home</h2>
-          <div className="bg-white rounded-2xl shadow-md p-6 mb-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {homeFields.map((f) => (
-              <div key={f.label}>
-                <p className="text-gray-400 uppercase tracking-wide text-xs mb-0.5">{f.label}</p>
-                <p className="text-base font-semibold text-gray-900">{f.value}</p>
-              </div>
-            ))}
-          </div>
-        </>
+      {/* About me */}
+      {customer?.bio && (
+        <div className={CARD}>
+          <h2 className={`${SECTION_TITLE} mb-2`}>About me</h2>
+          <p className="text-gray-700 whitespace-pre-line">{customer.bio}</p>
+        </div>
       )}
 
-      {/* Pets */}
-      {hasPets && (
-        <>
-          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Pets</h2>
-          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-            <div className="flex items-start gap-4">
-              {customer?.pet_photo_url ? (
-                <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
-                  <Image
-                    src={customer.pet_photo_url}
-                    alt="Pet"
-                    width={64}
-                    height={64}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              ) : (
-                <div className="w-16 h-16 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-2xl shrink-0">
-                  🐾
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-gray-900">
-                  {petTypesLabel}
-                  {customer?.num_pets ? ` (${customer.num_pets})` : ""}
-                </p>
-                {customer?.pet_note && (
-                  <p className="text-sm text-gray-600 italic mt-1">&ldquo;{customer.pet_note}&rdquo;</p>
-                )}
+      {/* The home + Pets */}
+      {(homeFields.length > 0 || hasPets) && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          {homeFields.length > 0 && (
+            <div className={CARD}>
+              <div className="flex items-center gap-2 mb-1">
+                <HouseIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+                <h2 className={SECTION_TITLE}>The home</h2>
+              </div>
+              {homeTypeLine && <p className="text-sm text-gray-500 mb-3">{homeTypeLine}</p>}
+              <div className="flex flex-col gap-2.5">
+                {homeFields.map((f) => {
+                  const FieldIcon = HOME_FIELD_ICONS[f.icon];
+                  return (
+                    <div key={f.icon} className="flex items-center gap-2.5 text-sm text-emerald-950">
+                      {FieldIcon ? (
+                        <FieldIcon className="w-4 h-4 text-emerald-700 shrink-0" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 shrink-0" />
+                      )}
+                      <span>{f.text}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        </>
+          )}
+
+          {hasPets && (
+            <div className={CARD}>
+              <div className="flex items-center gap-2 mb-3">
+                <PawIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+                <h2 className={SECTION_TITLE}>Pets</h2>
+              </div>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <p className="font-semibold text-emerald-950">{petLine}</p>
+                {customer?.pet_photo_url ? (
+                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                    <Image
+                      src={customer.pet_photo_url}
+                      alt="Pet"
+                      width={56}
+                      height={56}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                    <PawIcon className="w-6 h-6 text-emerald-300" />
+                  </div>
+                )}
+              </div>
+              {customer?.pet_note && (
+                <div className="bg-white/60 rounded-xl px-3 py-2.5 text-sm text-gray-600 italic">
+                  &ldquo;{customer.pet_note}&rdquo;
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Usually clean */}
-      {(priorityBubbles.length > 0 || customer?.usual_cleaning_type || customer?.usage_frequency) && (
-        <>
-          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Usually clean</h2>
-          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-            {(customer?.usual_cleaning_type || customer?.usage_frequency) && (
-              <p className="text-sm text-gray-600 mb-3">
-                {[
-                  customer?.usual_cleaning_type ? CLEANING_TYPE_LABELS[customer.usual_cleaning_type] : null,
-                  customer?.usage_frequency ? FREQUENCY_LABELS[customer.usage_frequency] : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            )}
-            {priorityBubbles.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {priorityBubbles.map((label) => (
-                  <span
-                    key={label}
-                    className="text-sm px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-            )}
+      {priorityBubbles.length > 0 && (
+        <div className={CARD}>
+          <div className="flex items-center gap-2 mb-3">
+            <SparkleIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+            <h2 className={SECTION_TITLE}>Usually clean</h2>
           </div>
-        </>
+          <div className="flex flex-wrap gap-2">
+            {priorityBubbles.map((label) => (
+              <span
+                key={label}
+                className="text-sm px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Home notes */}
       {customer?.home_instructions && (
-        <>
-          <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Home notes</h2>
-          <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-            <p className="text-sm text-gray-600 italic whitespace-pre-line">&ldquo;{customer.home_instructions}&rdquo;</p>
+        <div className={CARD}>
+          <div className="flex items-center gap-2 mb-3">
+            <DocIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+            <h2 className={SECTION_TITLE}>Home notes</h2>
           </div>
-        </>
+          <div className="bg-white/60 rounded-xl px-3 py-2.5 text-sm text-gray-600 italic whitespace-pre-line">
+            &ldquo;{customer.home_instructions}&rdquo;
+          </div>
+        </div>
       )}
 
       {/* Reviews from cleaners */}
-      <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Reviews from cleaners</h2>
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+      <div className={CARD}>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <StarIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+            <h2 className={SECTION_TITLE}>Reviews from cleaners</h2>
+          </div>
+          {ratingCount > 0 && ratingAvg != null && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="font-bold text-emerald-950">{ratingAvg.toFixed(1)}</span>
+              <StarIcon className="w-4 h-4 text-emerald-700" />
+              <span className="text-sm text-gray-400">({ratingCount} {ratingCount === 1 ? "review" : "reviews"})</span>
+            </div>
+          )}
+        </div>
         {reviews.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-2">No reviews yet.</p>
         ) : (
@@ -290,7 +320,7 @@ export default async function CustomerProfilePage({
       </div>
 
       {/* Booking history */}
-      <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">
+      <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mt-2">
         Booking history
       </h2>
 
@@ -299,7 +329,7 @@ export default async function CustomerProfilePage({
           No bookings with this customer yet.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {bookings.map((b) => (
             <div key={b.id} className="bg-white rounded-2xl shadow-md p-5">
               <div className="flex items-center justify-between mb-3">

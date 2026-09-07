@@ -1,17 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { StarRatingDisplay } from "@/components/StarRating";
+import { StarIcon } from "./Icons";
 
 export type ReviewItem = {
   id: string;
   score: number;
   reviewText: string;
   reviewerName: string;
-  date: string;
 };
 
 const VISIBLE_COUNT = 3;
+
+function FilledStars({ score }: { score: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <StarIcon key={n} className={`w-4 h-4 ${n <= score ? "text-emerald-700" : "text-emerald-100"}`} />
+      ))}
+    </div>
+  );
+}
 
 // Shows up to 3 reviews inline, with a "See all reviews" toggle to expand the
 // rest in place — this page is otherwise a plain server component, so this
@@ -22,24 +31,21 @@ export default function ReviewsList({ reviews }: { reviews: ReviewItem[] }) {
   const remaining = reviews.length - VISIBLE_COUNT;
 
   return (
-    <div className="flex flex-col gap-4">
-      {shown.map((r) => (
-        <div key={r.id} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
-          <div className="flex items-center justify-between gap-3 mb-1">
-            <p className="text-sm font-semibold text-gray-900">{r.reviewerName}</p>
-            <StarRatingDisplay value={r.score} size="sm" />
-          </div>
-          <p className="text-sm text-gray-600 italic">&ldquo;{r.reviewText}&rdquo;</p>
-          <p className="text-xs text-gray-400 mt-1">{r.date}</p>
+    <div className="flex flex-col">
+      {shown.map((r, i) => (
+        <div key={r.id} className={`flex flex-col gap-1 py-3 ${i > 0 ? "border-t border-emerald-900/10" : "pt-0"}`}>
+          <FilledStars score={r.score} />
+          <p className="text-sm text-gray-700">&ldquo;{r.reviewText}&rdquo;</p>
+          <p className="text-sm text-gray-400">— {r.reviewerName}</p>
         </div>
       ))}
       {!expanded && remaining > 0 && (
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700 text-start"
+          className="mt-2 text-sm font-semibold text-emerald-800 hover:text-emerald-900 text-center"
         >
-          See all reviews ({reviews.length})
+          See all reviews ({reviews.length}) →
         </button>
       )}
     </div>
