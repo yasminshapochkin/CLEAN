@@ -35,6 +35,7 @@ interface Props {
   totalHosts: number
   newHostsThisMonth: number
   pendingApplications: number
+  bookingRequestsCount: number
   matchesThisWeek: number
   matchesChangePct: number | null
   cancellationRate: number | null
@@ -59,6 +60,7 @@ export function DashboardContent({
   totalHosts,
   newHostsThisMonth,
   pendingApplications,
+  bookingRequestsCount,
   matchesThisWeek,
   matchesChangePct,
   cancellationRate,
@@ -103,6 +105,13 @@ export function DashboardContent({
         />
         <DashboardKpiCard
           href="/admin/bookings"
+          value={bookingRequestsCount}
+          label={t('admin.dashboard.bookingRequests')}
+          sub={t('admin.dashboard.bookingRequestsSub')}
+          highlight={bookingRequestsCount > 0}
+        />
+        <DashboardKpiCard
+          href="/admin/matches"
           value={matchesThisWeek}
           label={t('admin.dashboard.matches')}
           sub={matchesChangePct === null ? undefined : `${matchesChangePct >= 0 ? '+' : ''}${matchesChangePct}%`}

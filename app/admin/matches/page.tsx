@@ -1,16 +1,16 @@
 import { fetchBookingResults } from '@/app/admin/bookingsData'
-import { BookingsList } from './BookingsList'
+import { MatchesList } from './MatchesList'
 import { unstable_noStore as noStore } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminBookingsPage() {
+export default async function AdminMatchesPage() {
   noStore()
-  const bookings = await fetchBookingResults(['pending', 'declined', 'cancelled'])
+  const matches = await fetchBookingResults(['accepted', 'completed'])
 
   return (
       <div className="px-6 py-6">
-        <BookingsList bookings={bookings} />
+        <MatchesList matches={matches} />
       </div>
   )
 }

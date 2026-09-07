@@ -5,16 +5,16 @@ import { AdminTable } from '@/app/admin/adminTable'
 import { BookingRow, BOOKING_TEMPLATE } from '@/app/admin/BookingRow'
 import type { BookingResult, BookingStatus } from '@/lib/types/booking'
 
-// "Booking Requests" — every booking that hasn't (or didn't) turn into a
-// match: pending, declined, cancelled. Once a cleaner accepts, it moves to
-// the separate Matches list (app/admin/matches) instead of showing here.
-const TABS: ('all' | BookingStatus)[] = ['all', 'pending', 'declined', 'cancelled']
+// "Matches" — bookings a cleaner has accepted (or since completed). A
+// booking lands here the moment respondToBooking sets it to 'accepted',
+// leaving the separate Booking Requests list (app/admin/bookings).
+const TABS: ('all' | BookingStatus)[] = ['all', 'accepted', 'completed']
 
-export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
+export function MatchesList({ matches }: { matches: BookingResult[] }) {
   const { t } = useLanguage()
-  const [tab, setTab] = useState<'all' | BookingStatus>('pending')
+  const [tab, setTab] = useState<'all' | BookingStatus>('all')
 
-  const filtered = tab === 'all' ? bookings : bookings.filter(b => b.status === tab)
+  const filtered = tab === 'all' ? matches : matches.filter(m => m.status === tab)
 
   const columns = [
     { key: 'cleaner', label: t('admin.bookings.cleaner') },
@@ -29,7 +29,7 @@ export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
   const toolbar = (
     <div className="flex gap-2 flex-wrap">
       {TABS.map(tabKey => {
-        const count = tabKey === 'all' ? bookings.length : bookings.filter(b => b.status === tabKey).length
+        const count = tabKey === 'all' ? matches.length : matches.filter(m => m.status === tabKey).length
         return (
           <button
             key={tabKey}
@@ -41,7 +41,7 @@ export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
                 : 'bg-white text-gray-600 ring-1 ring-[#DED9E2] hover:bg-[#F7F4EA]'
             }`}
           >
-            {t(`admin.bookings.tabs.${tabKey}`)} ({count})
+            {t(`admin.matches.tabs.${tabKey}`)} ({count})
           </button>
         )
       })}
@@ -50,16 +50,16 @@ export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
 
   return (
     <AdminTable
-      title={t('admin.bookings.title')}
+      title={t('admin.matches.title')}
       toolbar={toolbar}
       columns={columns}
       template={BOOKING_TEMPLATE}
       minWidth="min-w-[980px]"
       isEmpty={filtered.length === 0}
-      empty={t('admin.bookings.empty')}
+      empty={t('admin.matches.empty')}
     >
-      {filtered.map(booking => (
-        <BookingRow key={booking.id} booking={booking} />
+      {filtered.map(match => (
+        <BookingRow key={match.id} booking={match} />
       ))}
     </AdminTable>
   )

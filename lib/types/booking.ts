@@ -7,6 +7,11 @@ export type BookingResult = {
   cleaner_id?: string
   cleaner_name: string
   cleaner_avatar_url: string | null
+  // Optional — populated by the admin Booking Requests/Matches lists so a
+  // customer's name+avatar can render the same way a cleaner's does (see
+  // app/admin/bookingsData.ts). Not used by the customer/cleaner-facing views.
+  customer_id?: string
+  customer_avatar_url?: string | null
   service_type: 'residential' | 'commercial'
   scheduled_date: string // 'YYYY-MM-DD'
   scheduled_start: string // 'HH:MM'

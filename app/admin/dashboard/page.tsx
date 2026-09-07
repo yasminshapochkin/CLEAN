@@ -114,6 +114,10 @@ export default async function AdminDashboardPage() {
   const cancellationRate = decidedBookings.length === 0 ? null : Math.round((cancelledBookings.length / decidedBookings.length) * 100)
 
   const unmatchedCount = bookings.filter((b) => b.status === 'pending' && new Date(b.created_at) < twoHoursAgo).length
+  // Every currently-pending booking, regardless of age — unlike unmatchedCount
+  // above (which only flags requests stale 2h+ as needing attention), this is
+  // what makes a request the customer *just* submitted show up immediately.
+  const bookingRequestsCount = bookings.filter((b) => b.status === 'pending').length
 
   // Rating averages — weighted by each row's rating_count so it's a true mean of
   // every individual rating (not an average of averages). rating_avg can arrive
@@ -173,6 +177,7 @@ export default async function AdminDashboardPage() {
           totalHosts={totalHosts}
           newHostsThisMonth={newHostsThisMonth}
           pendingApplications={pendingApplications}
+          bookingRequestsCount={bookingRequestsCount}
           matchesThisWeek={matchesThisWeek}
           matchesChangePct={matchesChangePct}
           cancellationRate={cancellationRate}
