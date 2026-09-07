@@ -844,12 +844,16 @@ export async function acknowledgeAllCancellations(bookingIds: string[]) {
   return { success: true };
 }
 
-// Cleaner rates the customer of a completed clean (1-5, numbers only for now).
-// Upserts one rating per cleaner per booking; re-submitting updates the score.
-// The DB trigger recomputes the customer's rating_avg/rating_count. RLS allows
-// the insert only when rater_id = auth.uid(); we also verify the booking is the
-// cleaner's own and `completed`.
-export async function rateCustomer(bookingId: string, score: number) {
+// Cleaner rates the customer of a completed clean (1-5) and can optionally
+// leave a free-text review alongside it (see migration 0028) — shown as
+// "Reviews from cleaners" on /cleaner/customers/[id]. Upserts one rating per
+// cleaner per customer; re-submitting updates the score/review. The DB
+// trigger recomputes the customer's rating_avg/rating_count (review_text
+// isn't part of that aggregate). RLS allows the insert only when
+// rater_id = auth.uid(); we also verify the booking is the cleaner's own and
+// `completed`. `reviewText` is optional — when omitted, any existing review
+// text is left untouched (only the score is (re)written).
+export async function rateCustomer(bookingId: string, score: number, reviewText?: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -874,6 +878,7 @@ export async function rateCustomer(bookingId: string, score: number) {
       ratee_id: booking.customer_id,
       ratee_role: "customer",
       score,
+      ...(reviewText !== undefined && { review_text: reviewText.trim() || null }),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "rater_id,ratee_id" },

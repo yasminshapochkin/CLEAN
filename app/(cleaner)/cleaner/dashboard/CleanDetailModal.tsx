@@ -46,18 +46,35 @@ export default function CleanDetailModal({
   const [rating, setRating] = useState<number | null>(booking.my_rating ?? null);
   const [ratingErr, setRatingErr] = useState(false);
   const [ratingPending, startRating] = useTransition();
+  const [reviewText, setReviewText] = useState(booking.my_review_text ?? "");
+  const [reviewSaved, setReviewSaved] = useState(false);
 
   function handleRate(score: number) {
     setRatingErr(false);
     const prev = rating;
     setRating(score);
     startRating(async () => {
-      const res = await rateCustomer(booking.id, score);
+      const res = await rateCustomer(booking.id, score, reviewText);
       if (res?.error) {
         setRating(prev);
         setRatingErr(true);
         return;
       }
+      router.refresh();
+    });
+  }
+
+  function handleSaveReview() {
+    if (rating == null) return;
+    setRatingErr(false);
+    setReviewSaved(false);
+    startRating(async () => {
+      const res = await rateCustomer(booking.id, rating, reviewText);
+      if (res?.error) {
+        setRatingErr(true);
+        return;
+      }
+      setReviewSaved(true);
       router.refresh();
     });
   }
@@ -195,6 +212,36 @@ export default function CleanDetailModal({
                 )}
               </div>
               {ratingErr && <p className="text-sm text-red-600 mt-1">{t("rate_error")}</p>}
+
+              {rating != null && (
+                <div className="mt-3">
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => {
+                      setReviewText(e.target.value);
+                      setReviewSaved(false);
+                    }}
+                    rows={2}
+                    maxLength={500}
+                    placeholder={t("rate_review_placeholder")}
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-3 mt-1.5">
+                    <button
+                      type="button"
+                      onClick={handleSaveReview}
+                      disabled={ratingPending}
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                    >
+                      {t("rate_review_save")}
+                    </button>
+                    {ratingPending && <span className="text-sm text-gray-400">{t("rate_saving")}</span>}
+                    {!ratingPending && reviewSaved && (
+                      <span className="text-sm text-gray-400">{t("rate_saved")}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

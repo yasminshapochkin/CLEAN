@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Profile, Booking, Customer } from "@/types/database";
 import BackLink from "./BackLink";
 import DateCube from "./DateCube";
+import ReviewsList, { type ReviewItem } from "./ReviewsList";
 import { StarRatingDisplay } from "@/components/StarRating";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -45,17 +46,6 @@ const FREQUENCY_LABELS: Record<string, string> = {
   one_time: "One-time",
 };
 
-// A small placeholder for sections whose feature isn't built yet — kept
-// visually consistent with the mockup ("keep the space blank and write
-// coming soon") rather than just omitting the section.
-function ComingSoon({ label }: { label: string }) {
-  return (
-    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-4 text-center text-sm text-gray-400">
-      {label} coming soon
-    </div>
-  );
-}
-
 export default async function CustomerProfilePage({
   params,
   searchParams,
@@ -74,7 +64,7 @@ export default async function CustomerProfilePage({
   // below — the page 404s unless this cleaner has a booking with this customer.
   const supabase = createAdminClient();
 
-  const [{ data: profile }, { data: customer }, { data: bookings }] = await Promise.all([
+  const [{ data: profile }, { data: customer }, { data: bookings }, { data: reviewRows }] = await Promise.all([
     supabase
       .from("profiles")
       .select("*")
@@ -93,6 +83,18 @@ export default async function CustomerProfilePage({
       .order("scheduled_date", { ascending: false })
       .order("scheduled_start", { ascending: false })
       .returns<Booking[]>(),
+    // "Reviews from cleaners" — every cleaner's rating of this host that
+    // includes a free-text review (see migration 0028), not just this
+    // cleaner's own. Uses the admin client since RLS ("Participants read
+    // ratings") would otherwise hide other cleaners' rows.
+    supabase
+      .from("ratings")
+      .select("id, score, review_text, updated_at, rater:profiles!rater_id(full_name)")
+      .eq("ratee_id", id)
+      .eq("ratee_role", "customer")
+      .not("review_text", "is", null)
+      .order("updated_at", { ascending: false })
+      .returns<{ id: string; score: number; review_text: string; updated_at: string; rater: { full_name: string | null } | null }[]>(),
   ]);
 
   if (!profile || !bookings || bookings.length === 0) notFound();
@@ -126,6 +128,14 @@ export default async function CustomerProfilePage({
   const priorityBubbles = (customer?.cleaning_priorities ?? []).map((p) =>
     p === "other" ? customer?.cleaning_priorities_other || "Other" : PRIORITY_LABELS[p] ?? p
   );
+
+  const reviews: ReviewItem[] = (reviewRows ?? []).map((r) => ({
+    id: r.id,
+    score: r.score,
+    reviewText: r.review_text,
+    reviewerName: r.rater?.full_name ?? "A cleaner",
+    date: new Date(r.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+  }));
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -271,8 +281,12 @@ export default async function CustomerProfilePage({
 
       {/* Reviews from cleaners */}
       <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wide mb-3">Reviews from cleaners</h2>
-      <div className="mb-6">
-        <ComingSoon label="Reviews" />
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+        {reviews.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-2">No reviews yet.</p>
+        ) : (
+          <ReviewsList reviews={reviews} />
+        )}
       </div>
 
       {/* Booking history */}

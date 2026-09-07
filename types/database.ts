@@ -201,6 +201,9 @@ export interface BookingWithCustomer extends Booking {
   // (null = not yet rated). Attached by the dashboard page so the detail modal
   // can show/seed the rating control. See migration 0011.
   my_rating?: number | null;
+  // The review text the current cleaner already left for this customer, if
+  // any (null = none yet). Attached by the dashboard page alongside my_rating.
+  my_review_text?: string | null;
 }
 
 export interface Rating {
@@ -210,6 +213,8 @@ export interface Rating {
   ratee_id: string;
   ratee_role: UserRole;
   score: number;
+  // Optional free-text review alongside the numeric score. See migration 0028.
+  review_text: string | null;
   created_at: string;
   updated_at: string;
 }

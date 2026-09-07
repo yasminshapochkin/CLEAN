@@ -94,14 +94,19 @@ export default async function CleanerDashboardPage() {
   // same score in the detail modal.
   const { data: myRatings } = await admin
     .from("ratings")
-    .select("ratee_id, score")
+    .select("ratee_id, score, review_text")
     .eq("rater_id", user.id);
   const ratingMap = Object.fromEntries((myRatings ?? []).map((r) => [r.ratee_id, r.score]));
+  const reviewMap = Object.fromEntries((myRatings ?? []).map((r) => [r.ratee_id, r.review_text]));
 
   const pastBookings = (pastRaw ?? [])
     .filter((b) => startDateTime(b) < now)
     .slice(0, 20)
-    .map((b) => ({ ...b, my_rating: ratingMap[b.customer_id] ?? null }));
+    .map((b) => ({
+      ...b,
+      my_rating: ratingMap[b.customer_id] ?? null,
+      my_review_text: reviewMap[b.customer_id] ?? null,
+    }));
 
   if (!cleanerStatus || cleanerStatus === "pending") {
     return (
