@@ -343,6 +343,7 @@ const translations = {
         tabs: {
           all: 'All',
           pending: 'Pending',
+          expired: 'Expired',
           declined: 'Declined',
           cancelled: 'Cancelled',
         },
@@ -352,6 +353,8 @@ const translations = {
         notSure: 'Not sure',
         notes: 'Notes',
         cleanerModifiedNote: 'Updated by the cleaner since it was requested.',
+        expiredLabel: 'Expired',
+        expiredNote: "This request's date has passed with no match — it never got a response in time.",
         role: {
           cleaner: 'Cleaner',
           customer: 'Customer',
@@ -995,6 +998,7 @@ const translations = {
         tabs: {
           all: 'הכל',
           pending: 'ממתינות',
+          expired: 'פג תוקף',
           declined: 'נדחו',
           cancelled: 'בוטלו',
         },
@@ -1004,6 +1008,8 @@ const translations = {
         notSure: 'לא בטוח/ה',
         notes: 'הערות',
         cleanerModifiedNote: 'עודכן על ידי המנקה מאז הבקשה.',
+        expiredLabel: 'פג תוקף',
+        expiredNote: 'התאריך של הבקשה הזו כבר עבר ללא התאמה — לא התקבלה תגובה בזמן.',
         role: {
           cleaner: 'מנקה',
           customer: 'לקוח',

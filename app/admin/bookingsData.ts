@@ -31,6 +31,13 @@ export async function fetchBookingResults(statuses: BookingStatus[]): Promise<Bo
   const profileMap = new Map((profileRows ?? []).map(p => [p.id, p]))
   const emailMap = new Map((authData.data?.users ?? []).map(u => [u.id, u.email ?? '']))
 
+  // Plain YYYY-MM-DD comparison against scheduled_date (also stored as
+  // YYYY-MM-DD, no time component) — sorts/compares correctly as a string,
+  // and is recomputed fresh on every request so "expired" always reflects
+  // the actual current date rather than a value baked in at some past load.
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
   return (bookingRows ?? []).map(b => {
     const cleanerProfile = profileMap.get(b.cleaner_id)
     const customerProfile = profileMap.get(b.customer_id)
@@ -55,6 +62,14 @@ export async function fetchBookingResults(statuses: BookingStatus[]): Promise<Bo
       address: b.address,
       notes: b.notes ?? undefined,
       status: b.status as BookingResult['status'],
+      // Still pending (never matched/approved) and the clean's own date has
+      // already come and gone — a stronger, more final signal than the
+      // existing 2h-staleness "Unmatched" KPI. Purely a display-time flag;
+      // deliberately doesn't touch bookings.status (no 'expired' DB value,
+      // and lib/expireRequests.ts already owns the real pending->declined
+      // transition on cleaner page loads once the 24h response_deadline
+      // passes — this is admin-side visibility, not a second source of truth).
+      expired: b.status === 'pending' && b.scheduled_date < todayStr,
     }
   })
 }

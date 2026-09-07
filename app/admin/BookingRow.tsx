@@ -44,7 +44,11 @@ export function BookingRow({ booking }: { booking: BookingResult }) {
       </p>
     </div>,
     <TextCell key="l">{booking.address}</TextCell>,
-    <StatusPill key="st" status={booking.status} label={t(`bookingCard.status.${booking.status}`)} />,
+    booking.expired ? (
+      <StatusPill key="st" status="expired" label={t('admin.bookings.expiredLabel')} />
+    ) : (
+      <StatusPill key="st" status={booking.status} label={t(`bookingCard.status.${booking.status}`)} />
+    ),
   ]
 
   const actions = (

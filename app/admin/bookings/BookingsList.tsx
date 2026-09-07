@@ -8,13 +8,24 @@ import type { BookingResult, BookingStatus } from '@/lib/types/booking'
 // "Booking Requests" — every booking that hasn't (or didn't) turn into a
 // match: pending, declined, cancelled. Once a cleaner accepts, it moves to
 // the separate Matches list (app/admin/matches) instead of showing here.
-const TABS: ('all' | BookingStatus)[] = ['all', 'pending', 'declined', 'cancelled']
+// "Expired" is a display-only pseudo-tab (see BookingResult.expired) — a
+// pending request whose own scheduled_date has passed; "Pending" excludes
+// those so it only ever shows genuinely still-live requests.
+type Tab = 'all' | BookingStatus | 'expired'
+const TABS: Tab[] = ['all', 'pending', 'expired', 'declined', 'cancelled']
+
+function matchesTab(booking: BookingResult, tab: Tab): boolean {
+  if (tab === 'all') return true
+  if (tab === 'expired') return !!booking.expired
+  if (tab === 'pending') return booking.status === 'pending' && !booking.expired
+  return booking.status === tab
+}
 
 export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
   const { t } = useLanguage()
-  const [tab, setTab] = useState<'all' | BookingStatus>('pending')
+  const [tab, setTab] = useState<Tab>('pending')
 
-  const filtered = tab === 'all' ? bookings : bookings.filter(b => b.status === tab)
+  const filtered = bookings.filter(b => matchesTab(b, tab))
 
   const columns = [
     { key: 'cleaner', label: t('admin.bookings.cleaner') },
@@ -29,7 +40,7 @@ export function BookingsList({ bookings }: { bookings: BookingResult[] }) {
   const toolbar = (
     <div className="flex gap-2 flex-wrap">
       {TABS.map(tabKey => {
-        const count = tabKey === 'all' ? bookings.length : bookings.filter(b => b.status === tabKey).length
+        const count = bookings.filter(b => matchesTab(b, tabKey)).length
         return (
           <button
             key={tabKey}

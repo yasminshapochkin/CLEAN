@@ -37,4 +37,8 @@ export type BookingResult = {
   cleaner_phone?: string
   customer_email?: string
   customer_phone?: string
+  // Admin-only display flag: still `pending` and scheduled_date has already
+  // passed. Computed fresh per request in app/admin/bookingsData.ts — never
+  // stored, since there's no 'expired' value in the bookings.status enum.
+  expired?: boolean
 }

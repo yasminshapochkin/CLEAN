@@ -100,6 +100,10 @@ const STATUS_PILL: Record<string, string> = {
   completed: 'bg-[#80A1D4]/15 text-[#43629e] ring-[#80A1D4]/15',
   declined: 'bg-red-100 text-red-600 ring-red-100',
   cancelled: 'bg-gray-200 text-gray-500 ring-gray-200',
+  // Admin-only display status (see BookingResult.expired) — a pending
+  // request whose own scheduled_date has already passed. Not a real
+  // bookings.status value.
+  expired: 'bg-orange-100 text-orange-700 ring-orange-100',
   // Active/Inactive/Blocked (Cleaners/Customers/Admins filter — lib/adminUserStatus.ts)
   active: 'bg-[#75C9C8]/20 text-[#2f7d7c] ring-[#75C9C8]/20',
   inactive: 'bg-[#DED9E2] text-gray-700 ring-[#DED9E2]',

@@ -32,8 +32,18 @@ export function BookingDetailCard({ booking, onClose }: { booking: BookingResult
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <span className="text-gray-400">{t('admin.shared.status')}</span>
-            <StatusPill status={booking.status} label={t(`bookingCard.status.${booking.status}`)} />
+            {booking.expired ? (
+              <StatusPill status="expired" label={t('admin.bookings.expiredLabel')} />
+            ) : (
+              <StatusPill status={booking.status} label={t(`bookingCard.status.${booking.status}`)} />
+            )}
           </div>
+
+          {booking.expired && (
+            <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+              {t('admin.bookings.expiredNote')}
+            </p>
+          )}
 
           <div className="flex items-start justify-between gap-3">
             <span className="text-gray-400 shrink-0">{t('admin.bookings.dateTime')}</span>
