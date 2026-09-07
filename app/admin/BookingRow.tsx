@@ -8,8 +8,10 @@ import type { BookingResult } from '@/lib/types/booking'
 
 // Shared by the Booking Requests and Matches lists — same row shape either
 // way, only the surrounding AdminTable (title/tabs/filtering) differs.
+// Kept tight enough that the row fits without horizontal scroll on a
+// typical admin viewport (same fix already applied to Applications/Cleaners).
 export const BOOKING_TEMPLATE =
-  'minmax(160px,1.1fr) minmax(160px,1.1fr) 96px minmax(140px,1fr) minmax(130px,1fr) 104px 92px'
+  'minmax(140px,1fr) minmax(140px,1fr) 88px minmax(110px,0.85fr) minmax(100px,0.75fr) 88px 76px'
 
 function formatDate(dateStr: string) {
   const [y, m, d] = dateStr.split('-').map(Number)

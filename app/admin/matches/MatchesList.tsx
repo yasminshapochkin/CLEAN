@@ -54,7 +54,7 @@ export function MatchesList({ matches }: { matches: BookingResult[] }) {
       toolbar={toolbar}
       columns={columns}
       template={BOOKING_TEMPLATE}
-      minWidth="min-w-[980px]"
+      minWidth="min-w-[860px]"
       isEmpty={filtered.length === 0}
       empty={t('admin.matches.empty')}
     >
