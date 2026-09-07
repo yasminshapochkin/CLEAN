@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { StarIcon } from "./Icons";
+import { StarIcon } from "./HostProfileIcons";
 
 export type ReviewItem = {
   id: string;

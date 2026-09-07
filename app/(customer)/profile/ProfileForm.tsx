@@ -28,6 +28,7 @@ type DefaultValues = {
 type Props = {
   defaultValues: DefaultValues
   action: (state: ActionResult, formData: FormData) => Promise<ActionResult>
+  onSaved?: () => void
 }
 
 function SubmitButton() {
@@ -44,7 +45,7 @@ function SubmitButton() {
   )
 }
 
-export function ProfileForm({ defaultValues, action }: Props) {
+export function ProfileForm({ defaultValues, action, onSaved }: Props) {
   const { t } = useLanguage()
   const [state, formAction] = useFormState(action, null)
   const router = useRouter()
@@ -74,8 +75,9 @@ export function ProfileForm({ defaultValues, action }: Props) {
       if (state.avatarUrl) setPreview(state.avatarUrl)
       if (state.petPhotoUrl) setPetPhotoPreview(state.petPhotoUrl)
       router.refresh()
+      onSaved?.()
     }
-  }, [state, router])
+  }, [state, router, onSaved])
 
   const fieldClass = 'border border-gray-300 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
   const labelClass = 'text-xs font-semibold text-gray-600 uppercase tracking-wide'
@@ -111,7 +113,7 @@ export function ProfileForm({ defaultValues, action }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-lg">
+    <div className="flex flex-col gap-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold text-gray-900">{t('profile.title')}</h1>
       {/* Profile header card */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex items-center gap-5">

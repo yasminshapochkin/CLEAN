@@ -203,6 +203,7 @@ const translations = {
     },
     profile: {
       title: 'My Profile',
+      editProfile: 'Edit profile',
       changePhoto: 'Change photo',
       yourName: 'Your name',
       addAddress: 'Add your address',
@@ -949,6 +950,7 @@ const translations = {
     },
     profile: {
       title: 'הפרופיל שלי',
+      editProfile: 'עריכת פרופיל',
       changePhoto: 'שינוי תמונה',
       yourName: 'השם שלך',
       addAddress: 'הוספת כתובת',
