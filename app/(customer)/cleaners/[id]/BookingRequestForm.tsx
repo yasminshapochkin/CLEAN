@@ -295,10 +295,16 @@ export function BookingRequestForm({
               <option value="other">{t('bookingRequestForm.dwellingOther')}</option>
             </select>
             <div className="flex gap-2">
-              <input type="number" min={0} value={homeBedrooms} onChange={e => setHomeBedrooms(e.target.value)}
-                placeholder={t('bookingRequestForm.bedroomsShort', { n: '0' })} className={`${fieldClass} flex-1`} />
-              <input type="number" min={0} value={homeBathrooms} onChange={e => setHomeBathrooms(e.target.value)}
-                placeholder={t('bookingRequestForm.bathroomsShort', { n: '0' })} className={`${fieldClass} flex-1`} />
+              <div className="flex flex-col gap-1 flex-1">
+                <label htmlFor="homeBedrooms" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('bookingRequestForm.bedroomsLabel')}</label>
+                <input id="homeBedrooms" type="number" min={0} value={homeBedrooms} onChange={e => setHomeBedrooms(e.target.value)}
+                  className={fieldClass} />
+              </div>
+              <div className="flex flex-col gap-1 flex-1">
+                <label htmlFor="homeBathrooms" className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('bookingRequestForm.bathroomsLabel')}</label>
+                <input id="homeBathrooms" type="number" min={0} value={homeBathrooms} onChange={e => setHomeBathrooms(e.target.value)}
+                  className={fieldClass} />
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setHomeEditing(false)} className="text-xs font-semibold text-gray-500 px-2 py-1">
