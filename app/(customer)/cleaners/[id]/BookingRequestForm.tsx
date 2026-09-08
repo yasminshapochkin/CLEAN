@@ -10,7 +10,7 @@ type WeeklySlot = { day_of_week: number; start_time: string; end_time: string }
 type DateSlot = { date: string; start_time: string; end_time: string }
 
 type HostDefaults = {
-  dwelling_type: 'apartment' | 'house' | 'guesthouse' | 'other' | null
+  dwelling_type: 'apartment' | 'house' | 'guesthouse' | 'office' | 'villa' | 'other' | null
   bedrooms: number | null
   num_rooms: number | null
   bathrooms: number | null
@@ -85,7 +85,7 @@ export function BookingRequestForm({
   // "customer manages own profile" RLS already allows it).
   const [hostDefaults, setHostDefaults] = useState<HostDefaults | null>(null)
   const [homeEditing, setHomeEditing] = useState(false)
-  const [homeDwelling, setHomeDwelling] = useState<'apartment' | 'house' | 'guesthouse' | 'other'>('house')
+  const [homeDwelling, setHomeDwelling] = useState<'apartment' | 'house' | 'guesthouse' | 'office' | 'villa' | 'other'>('house')
   const [homeBedrooms, setHomeBedrooms] = useState('')
   const [homeBathrooms, setHomeBathrooms] = useState('')
   const [homeSaving, setHomeSaving] = useState(false)
@@ -292,7 +292,8 @@ export function BookingRequestForm({
               <option value="apartment">{t('bookingRequestForm.dwellingApartment')}</option>
               <option value="house">{t('bookingRequestForm.dwellingHouse')}</option>
               <option value="guesthouse">{t('bookingRequestForm.dwellingGuesthouse')}</option>
-              <option value="other">{t('bookingRequestForm.dwellingOther')}</option>
+              <option value="office">{t('bookingRequestForm.dwellingOffice')}</option>
+              <option value="villa">{t('bookingRequestForm.dwellingVilla')}</option>
             </select>
             <div className="flex gap-2">
               <div className="flex flex-col gap-1 flex-1">

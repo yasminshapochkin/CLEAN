@@ -6,7 +6,9 @@ import { HouseIcon, PinIcon, StarIcon, PawIcon, SparkleIcon, DocIcon, CheckIcon,
 const DWELLING_LABELS: Record<string, string> = {
   apartment: "Apartment",
   house: "House",
-  guesthouse: "Guesthouse",
+  guesthouse: "Guesthouse / Airbnb",
+  office: "Office",
+  villa: "Villa",
   other: "Other",
 };
 

@@ -12,7 +12,7 @@ export type BookingSummaryData = {
   scheduledDate: string; // 'YYYY-MM-DD'
   scheduledStart: string; // 'HH:MM' or 'HH:MM:SS'
   durationHours: number;
-  homeDwellingType: "apartment" | "house" | "guesthouse" | "other" | null;
+  homeDwellingType: "apartment" | "house" | "guesthouse" | "office" | "villa" | "other" | null;
   homeArea: string | null;
   homeBedrooms: number | null;
   homeBathrooms: number | null;
@@ -35,7 +35,7 @@ const STRINGS = {
     durationHelp: "This is how long we estimate the clean will take. The actual time may be a little shorter or longer.",
     durationValue: (n: number) => `${n} hours`,
     yourHome: "Your home",
-    dwelling: { apartment: "Apartment", house: "House", guesthouse: "Guesthouse", other: "Home" },
+    dwelling: { apartment: "Apartment", house: "House", guesthouse: "Guesthouse / Airbnb", office: "Office", villa: "Villa", other: "Home" },
     bedrooms: (n: number) => `${n} bedroom${n === 1 ? "" : "s"}`,
     bathrooms: (n: number) => `${n} bathroom${n === 1 ? "" : "s"}`,
     cleaningType: "Cleaning type",
@@ -60,7 +60,7 @@ const STRINGS = {
     durationHelp: "זהו הזמן המשוער שלוקח לנקות את הבית. הזמן בפועל עשוי להיות מעט קצר או ארוך יותר.",
     durationValue: (n: number) => `${n} שעות`,
     yourHome: "הבית שלכם",
-    dwelling: { apartment: "דירה", house: "בית", guesthouse: "יחידת אירוח", other: "בית" },
+    dwelling: { apartment: "דירה", house: "בית", guesthouse: "יחידת אירוח / Airbnb", office: "משרד", villa: "וילה", other: "בית" },
     bedrooms: (n: number) => `${n} חדרי שינה`,
     bathrooms: (n: number) => `${n} חדרי אמבטיה`,
     cleaningType: "סוג ניקיון",

@@ -18,7 +18,7 @@ export interface Profile {
   created_at: string;
 }
 
-export type DwellingType = "apartment" | "house" | "guesthouse" | "other";
+export type DwellingType = "apartment" | "house" | "guesthouse" | "office" | "villa" | "other";
 export type PetType = "dog" | "cat" | "other";
 export type UsageFrequency = "weekly" | "twice_monthly" | "occasional" | "one_time";
 export type UsualCleaningType = "regular" | "deep";

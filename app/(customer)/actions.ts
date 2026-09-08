@@ -159,7 +159,7 @@ export async function updateCustomerProfile(
 // fast path to editing the profile, and every other booking (past or future)
 // picks up the same change, same as editing it from /profile would.
 export async function updateHomeQuickFields(fields: {
-  dwelling_type: 'apartment' | 'house' | 'guesthouse' | 'other' | null
+  dwelling_type: 'apartment' | 'house' | 'guesthouse' | 'office' | 'villa' | 'other' | null
   bedrooms: number | null
   bathrooms: number | null
 }): Promise<ActionResult> {
