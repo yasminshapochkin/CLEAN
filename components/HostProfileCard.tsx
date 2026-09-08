@@ -29,6 +29,13 @@ const PRIORITY_LABELS: Record<string, string> = {
 // density would suggest.
 const CARD = "bg-[#F7F4EA] rounded-2xl shadow-sm p-7";
 const SECTION_TITLE = "font-serif font-bold text-xl text-emerald-950";
+// "The home" and "Pets" sit side by side even on a phone-width screen (matching
+// the mockup, which is itself a mobile card with these two side by side) — these
+// compact variants shrink padding/type/icons only for those two cards so a
+// narrow two-column layout doesn't feel cramped; every other section stays full
+// width and keeps the roomier sizing above.
+const CARD_SPLIT = "bg-[#F7F4EA] rounded-2xl shadow-sm p-4 sm:p-7";
+const SECTION_TITLE_SPLIT = "font-serif font-bold text-base sm:text-xl text-emerald-950";
 
 // The host profile card — the same "how a cleaner sees this host" view used
 // both on the cleaner-facing /cleaner/customers/[id] page and, via an
@@ -154,23 +161,23 @@ export default function HostProfileCard({
         </div>
       )}
 
-      {/* The home + Pets */}
+      {/* The home + Pets — always side by side, even on a phone screen */}
       {(homeFields.length > 0 || hasPets) && (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {homeFields.length > 0 && (
-            <div className={CARD}>
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <HouseIcon className="w-6 h-6 text-emerald-700 shrink-0" />
-                <h2 className={SECTION_TITLE}>The home</h2>
+            <div className={CARD_SPLIT}>
+              <div className="flex items-center gap-2 sm:gap-2.5 mb-1 sm:mb-1.5">
+                <HouseIcon className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-700 shrink-0" />
+                <h2 className={SECTION_TITLE_SPLIT}>The home</h2>
               </div>
-              {homeTypeLine && <p className="text-base text-gray-500 mb-4">{homeTypeLine}</p>}
-              <div className="flex flex-col gap-3.5">
+              {homeTypeLine && <p className="text-xs sm:text-base text-gray-500 mb-2.5 sm:mb-4">{homeTypeLine}</p>}
+              <div className="flex flex-col gap-2 sm:gap-3.5">
                 {homeFields.map((f) => {
                   const FieldIcon = HOME_FIELD_ICONS[f.icon];
                   return (
-                    <div key={f.icon} className="flex items-center gap-3 text-base text-emerald-950">
+                    <div key={f.icon} className="flex items-center gap-2 sm:gap-3 text-xs sm:text-base text-emerald-950">
                       {FieldIcon ? (
-                        <FieldIcon className="w-5 h-5 text-emerald-700 shrink-0" />
+                        <FieldIcon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-700 shrink-0" />
                       ) : (
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 shrink-0" />
                       )}
@@ -183,15 +190,15 @@ export default function HostProfileCard({
           )}
 
           {hasPets && (
-            <div className={CARD}>
-              <div className="flex items-center gap-2.5 mb-4">
-                <PawIcon className="w-6 h-6 text-emerald-700 shrink-0" />
-                <h2 className={SECTION_TITLE}>Pets</h2>
+            <div className={CARD_SPLIT}>
+              <div className="flex items-center gap-2 sm:gap-2.5 mb-2.5 sm:mb-4">
+                <PawIcon className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-700 shrink-0" />
+                <h2 className={SECTION_TITLE_SPLIT}>Pets</h2>
               </div>
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <p className="font-semibold text-lg text-emerald-950">{petLine}</p>
+              <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2.5 sm:mb-4">
+                <p className="font-semibold text-sm sm:text-lg text-emerald-950">{petLine}</p>
                 {customer?.pet_photo_url ? (
-                  <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                  <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-gray-100 overflow-hidden shrink-0">
                     <Image
                       src={customer.pet_photo_url}
                       alt="Pet"
@@ -201,13 +208,13 @@ export default function HostProfileCard({
                     />
                   </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                    <PawIcon className="w-8 h-8 text-emerald-300" />
+                  <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                    <PawIcon className="w-5 h-5 sm:w-8 sm:h-8 text-emerald-300" />
                   </div>
                 )}
               </div>
               {customer?.pet_note && (
-                <div className="bg-white/60 rounded-xl px-4 py-3 text-base text-gray-600 italic">
+                <div className="bg-white/60 rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 text-xs sm:text-base text-gray-600 italic">
                   &ldquo;{customer.pet_note}&rdquo;
                 </div>
               )}
