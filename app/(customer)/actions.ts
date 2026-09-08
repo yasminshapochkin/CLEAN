@@ -151,6 +151,35 @@ export async function updateCustomerProfile(
   return { success: true, avatarUrl: avatarUrl ?? undefined, petPhotoUrl: petPhotoUrl ?? undefined }
 }
 
+// Lets the host update their home type/bedrooms/bathrooms inline from the
+// booking request card's "Your home" field (tap-to-edit, per the card
+// redesign) without opening the full profile form. This is deliberately a
+// profile write, not a booking-scoped snapshot — "Your home" is categorized
+// as a profile default, so editing it "for this booking" is really just a
+// fast path to editing the profile, and every other booking (past or future)
+// picks up the same change, same as editing it from /profile would.
+export async function updateHomeQuickFields(fields: {
+  dwelling_type: 'apartment' | 'house' | 'guesthouse' | 'other' | null
+  bedrooms: number | null
+  bathrooms: number | null
+}): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("customers")
+    .update({
+      dwelling_type: fields.dwelling_type,
+      bedrooms: fields.bedrooms,
+      bathrooms: fields.bathrooms,
+    })
+    .eq("id", user.id)
+  if (error) return { error: error.message }
+
+  return { success: true }
+}
+
 export async function createBooking(data: {
   cleaner_id: string
   service_type: string
@@ -164,6 +193,13 @@ export async function createBooking(data: {
   avail_window_end?: string
   address: string
   notes?: string
+  // Booking-specific fields for the redesigned request card. See migration
+  // 0029 — home/pet/cleaning-preference defaults live on the customer's
+  // profile and aren't part of this call.
+  cleaning_type?: 'regular' | 'deep'
+  extras?: string[]
+  pets_present?: boolean
+  host_present?: boolean
 }): Promise<ActionResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -268,6 +304,10 @@ export async function createBooking(data: {
     avail_window_end: data.avail_window_end ?? null,
     address: data.address,
     notes: data.notes ?? null,
+    cleaning_type: data.cleaning_type ?? null,
+    extras: data.extras ?? [],
+    pets_present: data.pets_present ?? null,
+    host_present: data.host_present ?? null,
     status: "pending",
     response_deadline: deadline.toISOString(),
   })

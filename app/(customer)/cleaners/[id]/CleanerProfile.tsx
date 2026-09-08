@@ -276,7 +276,7 @@ export function CleanerProfile({ cleaner, gallery = [], weeklyAvailability = [],
                 </span>
               ))}
             </div>
-            <BookingRequestForm cleaner={cleaner} weeklyAvailability={weeklyAvailability} dateAvailability={dateAvailability} presetDate={presetDate} presetAddress={presetAddress} presetDuration={presetDuration} presetAvailFrom={presetAvailFrom} presetAvailTo={presetAvailTo} disabled={bookingDisabled} />
+            <BookingRequestForm cleaner={cleaner} weeklyAvailability={weeklyAvailability} dateAvailability={dateAvailability} presetDate={presetDate} presetAddress={presetAddress} presetDuration={presetDuration} disabled={bookingDisabled} />
           </div>
         ) : (
           <div className="bg-white shadow-sm rounded-2xl p-6 text-center">

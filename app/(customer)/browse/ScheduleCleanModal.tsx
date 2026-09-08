@@ -75,8 +75,6 @@ export function ScheduleCleanModal({
           presetDate={date}
           presetAddress={location}
           presetDuration={duration}
-          presetAvailFrom={availFrom}
-          presetAvailTo={availTo}
           defaultOpen
           onCancel={onClose}
         />

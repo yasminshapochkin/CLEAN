@@ -7,7 +7,17 @@ import Link from "next/link";
 import { respondToBooking } from "../../actions";
 import EditBookingForm from "../EditBookingForm";
 import { useLang } from "@/context/LangContext";
+import BookingRequestSummary, { type BookingSummaryData } from "@/components/BookingRequestSummary";
 import type { BookingWithCustomer, BookingStatus } from "@/types/database";
+
+export type CustomerHomeInfo = {
+  dwelling_type: "apartment" | "house" | "guesthouse" | "other" | null;
+  bedrooms: number | null;
+  num_rooms: number | null;
+  bathrooms: number | null;
+  pet_types: ("dog" | "cat" | "other")[];
+  num_pets: number | null;
+};
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
   pending:   "bg-yellow-100 text-yellow-700",
@@ -16,11 +26,6 @@ const STATUS_STYLES: Record<BookingStatus, string> = {
   completed: "bg-blue-100 text-blue-700",
   cancelled: "bg-gray-100 text-gray-500",
 };
-
-function formatDate(d: string) {
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y}`;
-}
 
 function Countdown({ deadline }: { deadline: string }) {
   const { t } = useLang();
@@ -45,10 +50,12 @@ function Countdown({ deadline }: { deadline: string }) {
 interface Props {
   booking: BookingWithCustomer;
   showActions: boolean;
+  homeInfo?: CustomerHomeInfo | null;
+  hourlyRate?: number | null;
 }
 
-export default function RequestCard({ booking, showActions }: Props) {
-  const { t } = useLang();
+export default function RequestCard({ booking, showActions, homeInfo, hourlyRate }: Props) {
+  const { t, lang } = useLang();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<"accepted" | "declined" | null>(null);
@@ -59,9 +66,31 @@ export default function RequestCard({ booking, showActions }: Props) {
   const [confirmingAccept, setConfirmingAccept] = useState(false);
   const [editing, setEditing] = useState(false);
 
-  const svcLabel: Record<string, string> = {
-    residential: t("svc_residential"),
-    commercial: t("svc_commercial"),
+  const hasPets = (homeInfo?.pet_types.length ?? 0) > 0;
+  const petsLabel = homeInfo && hasPets
+    ? (() => {
+        const kind = homeInfo.pet_types[0];
+        const noun = kind === "dog" ? "dog" : kind === "cat" ? "cat" : "pet";
+        const n = homeInfo.num_pets ?? homeInfo.pet_types.length;
+        return `${n} ${noun}${n === 1 ? "" : "s"}`;
+      })()
+    : null;
+
+  const summaryData: BookingSummaryData = {
+    scheduledDate: booking.scheduled_date,
+    scheduledStart: booking.scheduled_start,
+    durationHours: booking.duration_hours,
+    homeDwellingType: homeInfo?.dwelling_type ?? null,
+    homeArea: booking.address,
+    homeBedrooms: homeInfo?.bedrooms ?? homeInfo?.num_rooms ?? null,
+    homeBathrooms: homeInfo?.bathrooms ?? null,
+    cleaningType: booking.cleaning_type,
+    extras: booking.extras ?? [],
+    petsLabel,
+    petsPresent: hasPets ? booking.pets_present : null,
+    hostPresent: booking.host_present,
+    notes: booking.notes,
+    hourlyRate: hourlyRate ?? null,
   };
 
   async function handleRespond(response: "accepted" | "declined") {
@@ -187,30 +216,17 @@ export default function RequestCard({ booking, showActions }: Props) {
 
             {/* Details */}
             <div className="px-8 py-6 space-y-5">
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_date")}</p>
-                  <p className="text-lg font-semibold text-gray-900">{formatDate(booking.scheduled_date)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_time")}</p>
-                  <p className="text-lg font-semibold text-gray-900">{booking.scheduled_start?.slice(0, 5)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_duration")}</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {booking.duration_hours}{t("req_h")}
-                    {booking.duration_flexible && (
-                      <span className="ms-2 text-sm font-semibold text-red-600">{t("req_duration_not_sure")}</span>
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_service")}</p>
-                  <p className="text-lg font-semibold text-gray-900">{svcLabel[booking.service_type] ?? booking.service_type}</p>
-                </div>
-              </div>
+              <BookingRequestSummary
+                data={summaryData}
+                cleanerName={booking.profiles?.full_name ?? t("req_customer")}
+                lang={lang}
+              />
+              {booking.duration_flexible && (
+                <p className="text-sm font-semibold text-red-600">{t("req_duration_not_sure")}</p>
+              )}
 
+              {/* Legacy field, kept for bookings made before the card redesign
+                  (migration 0029) — new bookings no longer set this. */}
               {booking.avail_window_start && booking.avail_window_end && (
                 <div className="bg-blue-50 rounded-xl px-4 py-3">
                   <p className="text-sm text-blue-600 uppercase tracking-wide mb-1">{t("req_avail_window")}</p>
@@ -224,13 +240,6 @@ export default function RequestCard({ booking, showActions }: Props) {
                 <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_address")}</p>
                 <p className="text-lg font-semibold text-gray-900">{booking.address}</p>
               </div>
-
-              {booking.notes && (
-                <div>
-                  <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">{t("req_notes")}</p>
-                  <p className="text-lg text-gray-700 bg-gray-50 rounded-xl px-4 py-3">{booking.notes}</p>
-                </div>
-              )}
 
               {currentStatus === "accepted" && booking.profiles?.phone && (
                 <div className="bg-green-50 border border-green-100 rounded-xl px-5 py-4">

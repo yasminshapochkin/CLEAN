@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import RequestCard from "./RequestCard";
+import RequestCard, { type CustomerHomeInfo } from "./RequestCard";
 import type { BookingWithCustomer } from "@/types/database";
 import type { Lang, TranslationKey } from "@/lib/lang";
 import { t } from "@/lib/lang";
@@ -33,15 +33,32 @@ export default async function RequestsPage() {
   const supabase = createAdminClient();
   const now = new Date().toISOString();
 
-  const { data: pending } = await supabase
-    .from("bookings")
-    .select("*, profiles!customer_id(full_name, phone, avatar_url)")
-    .eq("cleaner_id", user.id)
-    .eq("status", "pending")
-    .gt("response_deadline", now)
-    .order("scheduled_date", { ascending: true })
-    .order("scheduled_start", { ascending: true })
-    .returns<BookingWithCustomer[]>();
+  const [{ data: pending }, { data: cleanerRow }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("*, profiles!customer_id(full_name, phone, avatar_url)")
+      .eq("cleaner_id", user.id)
+      .eq("status", "pending")
+      .gt("response_deadline", now)
+      .order("scheduled_date", { ascending: true })
+      .order("scheduled_start", { ascending: true })
+      .returns<BookingWithCustomer[]>(),
+    supabase.from("cleaners").select("hourly_rate").eq("id", user.id).single<{ hourly_rate: number | null }>(),
+  ]);
+  const hourlyRate = cleanerRow?.hourly_rate ?? null;
+
+  // Home/pet info for the booking request card's "Your home"/"Pets" rows —
+  // read live from each requesting customer's profile (see migration 0029's
+  // note: this data isn't snapshotted onto the booking).
+  const customerIds = Array.from(new Set((pending ?? []).map((b) => b.customer_id)));
+  const { data: homeRows } = customerIds.length
+    ? await supabase
+        .from("customers")
+        .select("id, dwelling_type, bedrooms, num_rooms, bathrooms, pet_types, num_pets")
+        .in("id", customerIds)
+        .returns<(CustomerHomeInfo & { id: string })[]>()
+    : { data: [] as (CustomerHomeInfo & { id: string })[] };
+  const homeInfoMap = new Map((homeRows ?? []).map((r) => [r.id, r]));
 
   if (!pending || pending.length === 0) {
     return (
@@ -76,7 +93,13 @@ export default async function RequestsPage() {
               <h3 className="text-sm font-bold text-gray-700 mb-2">{formatDateHeader(lang, date)}</h3>
               <div className="space-y-3">
                 {pendingByDate.get(date)!.map((b) => (
-                  <RequestCard key={b.id} booking={b} showActions />
+                  <RequestCard
+                    key={b.id}
+                    booking={b}
+                    showActions
+                    homeInfo={homeInfoMap.get(b.customer_id) ?? null}
+                    hourlyRate={hourlyRate}
+                  />
                 ))}
               </div>
             </div>

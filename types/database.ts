@@ -193,6 +193,14 @@ export interface Booking {
   // migration 0014.
   avail_window_start: string | null;
   avail_window_end: string | null;
+  // Booking-specific fields for the redesigned request card (migration 0029).
+  // Home/pet/cleaning-preference *defaults* are read live from the customer's
+  // profile, not stored here — these are only what's genuinely specific to
+  // this one visit.
+  cleaning_type: "regular" | "deep" | null;
+  extras: string[];
+  pets_present: boolean | null;
+  host_present: boolean | null;
 }
 
 export interface BookingWithCustomer extends Booking {
