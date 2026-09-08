@@ -35,8 +35,8 @@ export default function ReviewsList({ reviews }: { reviews: ReviewItem[] }) {
       {shown.map((r, i) => (
         <div key={r.id} className={`flex flex-col gap-1 py-3 ${i > 0 ? "border-t border-emerald-900/10" : "pt-0"}`}>
           <FilledStars score={r.score} />
-          <p className="text-sm text-gray-700">&ldquo;{r.reviewText}&rdquo;</p>
-          <p className="text-sm text-gray-400">— {r.reviewerName}</p>
+          <p className="text-sm sm:text-base text-gray-700">&ldquo;{r.reviewText}&rdquo;</p>
+          <p className="text-xs sm:text-sm text-gray-400">— {r.reviewerName}</p>
         </div>
       ))}
       {!expanded && remaining > 0 && (

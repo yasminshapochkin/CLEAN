@@ -21,21 +21,15 @@ const PRIORITY_LABELS: Record<string, string> = {
   outdoor: "Outdoor",
 };
 
-// Shared card look (cream, matching the stakeholder mockup) for every
-// section. Padding/icon/type sizes are deliberately generous — the mockup
-// this is built from is proportioned for a narrow mobile card, and matching
-// its relative proportions (not its absolute pixel sizes) on a wider web
-// container means every element ends up a bit larger than a "default" web
-// density would suggest.
-const CARD = "bg-[#F7F4EA] rounded-2xl shadow-sm p-7";
-const SECTION_TITLE = "font-serif font-bold text-xl text-emerald-950";
-// "The home" and "Pets" sit side by side even on a phone-width screen (matching
-// the mockup, which is itself a mobile card with these two side by side) — these
-// compact variants shrink padding/type/icons only for those two cards so a
-// narrow two-column layout doesn't feel cramped; every other section stays full
-// width and keeps the roomier sizing above.
-const CARD_SPLIT = "bg-[#F7F4EA] rounded-2xl shadow-sm p-4 sm:p-7";
-const SECTION_TITLE_SPLIT = "font-serif font-bold text-base sm:text-xl text-emerald-950";
+// Shared look for every section, cream cards matching the mockup. Every
+// section heading and every section's body text share one size each — the
+// only thing that varies is padding, since "The home"/"Pets" sit side by
+// side (narrower) while the rest are full width.
+const CARD = "bg-[#F7F4EA] rounded-2xl shadow-sm p-5 sm:p-6";
+const CARD_SPLIT = "bg-[#F7F4EA] rounded-2xl shadow-sm p-4 sm:p-6";
+const SECTION_TITLE = "font-serif font-bold text-base sm:text-lg text-emerald-950";
+const SECTION_ICON = "w-5 h-5 sm:w-6 sm:h-6 text-emerald-700 shrink-0";
+const BODY = "text-sm sm:text-base";
 
 // The host profile card — the same "how a cleaner sees this host" view used
 // both on the cleaner-facing /cleaner/customers/[id] page and, via an
@@ -102,52 +96,52 @@ export default function HostProfileCard({
     <div className="flex flex-col gap-4">
       {action}
 
-      {/* Profile header */}
+      {/* Profile header — name/badge/location/stats kept compact so the
+          whole block stays roughly in line with the avatar, not spilling
+          well below it. */}
       <div className={CARD}>
-        <div className="flex items-start gap-6">
-          <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden shrink-0">
+        <div className="flex items-center gap-4 sm:gap-5">
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gray-200 overflow-hidden shrink-0">
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
                 alt={fullName}
-                width={128}
-                height={128}
+                width={112}
+                height={112}
                 className="object-cover w-full h-full"
               />
             ) : null}
           </div>
-          <div className="min-w-0">
-            <h1 className="font-serif text-4xl font-bold text-emerald-950">{fullName}</h1>
-            {isVerified && (
-              <span className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-800">
-                <CheckIcon className="w-4 h-4" /> Verified host
-              </span>
-            )}
-            {customer?.address && (
-              <p className="flex items-center gap-1.5 text-emerald-800 mt-2.5 text-base">
-                <PinIcon className="w-5 h-5 shrink-0" /> {customer.address}
-              </p>
-            )}
-            <div className="flex items-center gap-5 mt-4">
-              <div className="flex items-center gap-2.5">
-                <StarIcon className="w-7 h-7 text-amber-400" />
+          <div className="min-w-0 flex-1">
+            <h1 className="font-serif text-xl sm:text-2xl font-bold text-emerald-950 truncate">{fullName}</h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5">
+              {isVerified && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                  <CheckIcon className="w-3.5 h-3.5" /> Verified host
+                </span>
+              )}
+              {customer?.address && (
+                <span className="flex items-center gap-1 text-emerald-800 text-xs sm:text-sm">
+                  <PinIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> {customer.address}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4 mt-2">
+              <div className="flex items-center gap-1.5">
+                <StarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
                 <div className="leading-tight">
-                  <p className="font-bold text-2xl text-emerald-950">{ratingAvg != null ? ratingAvg.toFixed(1) : "—"}</p>
-                  <p className="text-sm text-gray-500">Host rating</p>
+                  <p className="font-bold text-sm sm:text-base text-emerald-950">{ratingAvg != null ? ratingAvg.toFixed(1) : "—"}</p>
+                  <p className="text-[11px] sm:text-xs text-gray-500">Host rating</p>
                 </div>
               </div>
-              {cleansCompleted > 0 && (
-                <>
-                  <div className="w-px h-10 bg-emerald-900/10" />
-                  <div className="flex items-center gap-2.5">
-                    <HouseIcon className="w-7 h-7 text-emerald-700" />
-                    <div className="leading-tight">
-                      <p className="font-bold text-2xl text-emerald-950">{cleansCompleted}</p>
-                      <p className="text-sm text-gray-500">Cleans completed</p>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="w-px h-7 sm:h-8 bg-emerald-900/10" />
+              <div className="flex items-center gap-1.5">
+                <HouseIcon className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700" />
+                <div className="leading-tight">
+                  <p className="font-bold text-sm sm:text-base text-emerald-950">{cleansCompleted}</p>
+                  <p className="text-[11px] sm:text-xs text-gray-500">Cleans completed</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -156,8 +150,8 @@ export default function HostProfileCard({
       {/* About me */}
       {customer?.bio && (
         <div className={CARD}>
-          <h2 className={`${SECTION_TITLE} mb-2.5`}>About me</h2>
-          <p className="text-base text-gray-700 whitespace-pre-line">{customer.bio}</p>
+          <h2 className={`${SECTION_TITLE} mb-2`}>About me</h2>
+          <p className={`${BODY} text-gray-700 whitespace-pre-line`}>{customer.bio}</p>
         </div>
       )}
 
@@ -166,18 +160,18 @@ export default function HostProfileCard({
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {homeFields.length > 0 && (
             <div className={CARD_SPLIT}>
-              <div className="flex items-center gap-2 sm:gap-2.5 mb-1 sm:mb-1.5">
-                <HouseIcon className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-700 shrink-0" />
-                <h2 className={SECTION_TITLE_SPLIT}>The home</h2>
+              <div className="flex items-center gap-2 mb-1.5">
+                <HouseIcon className={SECTION_ICON} />
+                <h2 className={SECTION_TITLE}>The home</h2>
               </div>
-              {homeTypeLine && <p className="text-xs sm:text-base text-gray-500 mb-2.5 sm:mb-4">{homeTypeLine}</p>}
-              <div className="flex flex-col gap-2 sm:gap-3.5">
+              {homeTypeLine && <p className={`${BODY} text-gray-500 mb-3`}>{homeTypeLine}</p>}
+              <div className="flex flex-col gap-2 sm:gap-2.5">
                 {homeFields.map((f) => {
                   const FieldIcon = HOME_FIELD_ICONS[f.icon];
                   return (
-                    <div key={f.icon} className="flex items-center gap-2 sm:gap-3 text-xs sm:text-base text-emerald-950">
+                    <div key={f.icon} className={`flex items-center gap-2 ${BODY} text-emerald-950`}>
                       {FieldIcon ? (
-                        <FieldIcon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-emerald-700 shrink-0" />
+                        <FieldIcon className="w-4 h-4 text-emerald-700 shrink-0" />
                       ) : (
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 shrink-0" />
                       )}
@@ -191,30 +185,30 @@ export default function HostProfileCard({
 
           {hasPets && (
             <div className={CARD_SPLIT}>
-              <div className="flex items-center gap-2 sm:gap-2.5 mb-2.5 sm:mb-4">
-                <PawIcon className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-700 shrink-0" />
-                <h2 className={SECTION_TITLE_SPLIT}>Pets</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <PawIcon className={SECTION_ICON} />
+                <h2 className={SECTION_TITLE}>Pets</h2>
               </div>
-              <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2.5 sm:mb-4">
-                <p className="font-semibold text-sm sm:text-lg text-emerald-950">{petLine}</p>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <p className={`${BODY} text-emerald-950`}>{petLine}</p>
                 {customer?.pet_photo_url ? (
-                  <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-100 overflow-hidden shrink-0">
                     <Image
                       src={customer.pet_photo_url}
                       alt="Pet"
-                      width={80}
-                      height={80}
+                      width={64}
+                      height={64}
                       className="object-cover w-full h-full"
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                    <PawIcon className="w-5 h-5 sm:w-8 sm:h-8 text-emerald-300" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                    <PawIcon className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-300" />
                   </div>
                 )}
               </div>
               {customer?.pet_note && (
-                <div className="bg-white/60 rounded-xl px-2.5 py-2 sm:px-4 sm:py-3 text-xs sm:text-base text-gray-600 italic">
+                <div className={`bg-white/60 rounded-xl px-3 py-2 ${BODY} text-gray-600 italic`}>
                   &ldquo;{customer.pet_note}&rdquo;
                 </div>
               )}
@@ -226,15 +220,15 @@ export default function HostProfileCard({
       {/* Usually clean */}
       {priorityBubbles.length > 0 && (
         <div className={CARD}>
-          <div className="flex items-center gap-2.5 mb-4">
-            <SparkleIcon className="w-6 h-6 text-emerald-700 shrink-0" />
+          <div className="flex items-center gap-2 mb-3">
+            <SparkleIcon className={SECTION_ICON} />
             <h2 className={SECTION_TITLE}>Usually clean</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {priorityBubbles.map((label) => (
               <span
                 key={label}
-                className="text-base px-4 py-2 rounded-full bg-emerald-50 text-emerald-800"
+                className={`${BODY} px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800`}
               >
                 {label}
               </span>
@@ -246,11 +240,11 @@ export default function HostProfileCard({
       {/* Home notes */}
       {customer?.home_instructions && (
         <div className={CARD}>
-          <div className="flex items-center gap-2.5 mb-4">
-            <DocIcon className="w-6 h-6 text-emerald-700 shrink-0" />
+          <div className="flex items-center gap-2 mb-3">
+            <DocIcon className={SECTION_ICON} />
             <h2 className={SECTION_TITLE}>Home notes</h2>
           </div>
-          <div className="bg-white/60 rounded-xl px-4 py-3 text-base text-gray-600 italic whitespace-pre-line">
+          <div className={`bg-white/60 rounded-xl px-3 py-2 ${BODY} text-gray-600 italic whitespace-pre-line`}>
             &ldquo;{customer.home_instructions}&rdquo;
           </div>
         </div>
@@ -258,21 +252,21 @@ export default function HostProfileCard({
 
       {/* Reviews from cleaners */}
       <div className={CARD}>
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2.5">
-            <StarIcon className="w-6 h-6 text-emerald-700 shrink-0" />
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <StarIcon className={SECTION_ICON} />
             <h2 className={SECTION_TITLE}>Reviews from cleaners</h2>
           </div>
           {ratingCount > 0 && ratingAvg != null && (
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="font-bold text-lg text-emerald-950">{ratingAvg.toFixed(1)}</span>
-              <StarIcon className="w-5 h-5 text-emerald-700" />
-              <span className="text-sm text-gray-400">({ratingCount} {ratingCount === 1 ? "review" : "reviews"})</span>
+              <span className={`font-bold ${BODY} text-emerald-950`}>{ratingAvg.toFixed(1)}</span>
+              <StarIcon className="w-4 h-4 text-emerald-700" />
+              <span className="text-xs sm:text-sm text-gray-400">({ratingCount} {ratingCount === 1 ? "review" : "reviews"})</span>
             </div>
           )}
         </div>
         {reviews.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-2">No reviews yet.</p>
+          <p className={`${BODY} text-gray-400 text-center py-2`}>No reviews yet.</p>
         ) : (
           <ReviewsList reviews={reviews} />
         )}
