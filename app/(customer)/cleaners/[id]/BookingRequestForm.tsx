@@ -232,6 +232,24 @@ export function BookingRequestForm({
     )
   }
 
+  // The draft form waits for the host-defaults fetch before rendering any
+  // interactive fields — several fields (address vs. street+area, cleaning
+  // type, pets) only know their correct initial value once it resolves.
+  // Rendering them earlier and letting the effect's setState calls land after
+  // the user has already interacted would either swap the address field out
+  // from under them mid-typing or silently revert a choice they'd already
+  // made. The fetch is a single indexed row read, so this is normally
+  // imperceptible.
+  if (!hostDefaults) {
+    return (
+      <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+        <div className="h-5 w-40 rounded bg-gray-100 animate-pulse" />
+        <div className="h-24 rounded-md bg-gray-50 animate-pulse" />
+        <div className="h-10 rounded-md bg-gray-50 animate-pulse" />
+      </div>
+    )
+  }
+
   const fieldClass = 'border border-gray-300 rounded-md px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white'
 
   return (
@@ -278,15 +296,13 @@ export function BookingRequestForm({
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('bookingRequestForm.yourHome')}</label>
-          {hostDefaults && !homeEditing && (
+          {!homeEditing && (
             <button type="button" onClick={() => setHomeEditing(true)} className="text-xs font-semibold text-blue-600 hover:text-blue-700">
               {t('bookingRequestForm.editHome')}
             </button>
           )}
         </div>
-        {!hostDefaults ? (
-          <div className="h-10 rounded-md bg-gray-50 animate-pulse" />
-        ) : homeEditing ? (
+        {homeEditing ? (
           <div className="border border-gray-300 rounded-md p-3 flex flex-col gap-2 bg-white">
             <select value={homeDwelling} onChange={e => setHomeDwelling(e.target.value as typeof homeDwelling)} className={fieldClass}>
               <option value="apartment">{t('bookingRequestForm.dwellingApartment')}</option>
@@ -375,7 +391,7 @@ export function BookingRequestForm({
               className={`${fieldClass} flex-1`}
             />
             <button type="button" onClick={addCustomExtra} className="text-sm font-semibold text-blue-600 px-2">
-              {t('bookingRequestForm.saveHome')}
+              {t('bookingRequestForm.confirmAdd')}
             </button>
           </div>
         ) : (

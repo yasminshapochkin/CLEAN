@@ -177,6 +177,7 @@ export async function updateHomeQuickFields(fields: {
     .eq("id", user.id)
   if (error) return { error: error.message }
 
+  revalidatePath("/profile")
   return { success: true }
 }
 

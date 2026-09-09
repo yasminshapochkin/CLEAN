@@ -11,7 +11,7 @@ import BookingRequestSummary, { type BookingSummaryData } from "@/components/Boo
 import type { BookingWithCustomer, BookingStatus } from "@/types/database";
 
 export type CustomerHomeInfo = {
-  dwelling_type: "apartment" | "house" | "guesthouse" | "other" | null;
+  dwelling_type: "apartment" | "house" | "guesthouse" | "office" | "villa" | "other" | null;
   bedrooms: number | null;
   num_rooms: number | null;
   bathrooms: number | null;
